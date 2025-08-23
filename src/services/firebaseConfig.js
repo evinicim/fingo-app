@@ -1,7 +1,8 @@
 import { initializeApp } from 'firebase/app';
 // Adicione os serviços que for usar, ex: getAuth, getFirestore
-// import { getAuth } from "firebase/auth";
-// import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 // Configuração do Firebase do seu projeto web
 // NUNCA coloque as chaves diretamente aqui. Use variáveis de ambiente!
@@ -18,5 +19,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 // Exporte os serviços que você inicializou para usar no resto do app
-// export const auth = getAuth(app);
-// export const db = getFirestore(app);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const storage = getStorage(app);
