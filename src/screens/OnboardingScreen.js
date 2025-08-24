@@ -1,36 +1,59 @@
 import React from 'react';
-import { View, Text, StyleSheet, Button, SafeAreaView, Image } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, Image } from 'react-native';
+import PrimaryNavButton from '../components/PrimaryNavButton'; 
 
 const OnboardingScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Bem-vindo ao FinGo!</Text>
-      
-      {/* 
-        Quando você adicionar a imagem 'logoFinGo.png' na pasta 'src/assets/images',
-        descomente o código abaixo para exibí-la.
-      */}
-      {<Image 
-        source={require('../assets/images/logoFinGo.png')} 
-        style={styles.image} 
-        resizeMode="contain"
-      />}
-
-      <Text style={styles.subtitle}>Seu guia para o mundo financeiro.</Text>
-      
-      <Button
-        title="Avançar"
-        onPress={() => navigation.navigate('Home')} // Navega para a tela Home
-      />
+      <View style={styles.contentContainer}>
+        <Image
+          source={require('../assets/images/FingoText.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+        <Text style={styles.subtitle}>Educação Financeira para os jovens</Text>
+        <Image
+          source={require('../assets/images/logoFinGo.png')}
+          style={styles.piggyImage}
+          resizeMode="contain"
+        />
+        <PrimaryNavButton
+          titulo="Começar"
+          onPress={() => navigation.navigate('Login')}
+        />
+      </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
-  subtitle: { fontSize: 16, color: 'gray', textAlign: 'center', marginBottom: 40 },
-  image: { width: '100%', height: 300, marginBottom: 20 },
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
+  contentContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 45,
+    paddingHorizontal: 12,
+  },
+  logo: {
+    width: 336,
+    height: 92.85,
+  },
+  subtitle: {
+    width: 339,
+    height: 60,
+    fontSize: 24,
+    lineHeight: 30,
+    textAlign: 'center',
+    color: '#000000',
+  },
+  piggyImage: {
+    width: 160,
+    height: 142,
+  },
 });
 
 export default OnboardingScreen;
