@@ -6,6 +6,7 @@ import WelcomeScreen from '../screens/WelcomeScreen'; // Assuming you'll create 
 import LoginScreen from '../screens/LoginScreen'; // Assuming you'll create this
 import RegisterScreen from '../screens/RegisterScreen'; // Assuming you'll create this
 import HomeScreen from '../screens/HomeScreen';
+import LoginScreen from '../screens/LoginScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -26,6 +27,11 @@ const AppNavigator = () => {
         name="Register"
         component={RegisterScreen} // Add Register Screen
         options={{ headerShown: false }} // Esconde o cabeçalho nesta tela
+      />
+      <Stack.Screen 
+        name="Login" 
+        component={LoginScreen} 
+        options={{ headerShown: false }} // Mostra o cabeçalho nesta tela
       />
       <Stack.Screen name="Home" component={HomeScreen} />
     </Stack.Navigator>
