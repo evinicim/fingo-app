@@ -13,6 +13,10 @@ const LoginScreen = ({ navigation }) => {
     borderWidth: 1,
     marginTop: 20,
   };
+  const handleLogin = () => {
+    console.log('Botão de Login pressionado!');
+
+  };
   
   const secondaryButtonTextStyles = {
     color: '#17D689',
@@ -39,13 +43,13 @@ const LoginScreen = ({ navigation }) => {
 
         <PrimaryNavButton
           titulo="Entrar"
-          onPress={() => { /* Lógica de login aqui */ }}
+          onPress={handleLogin}
         />
 
         {/* E AQUI VOCÊ PASSA ESSE ESTILO COMO UMA PROP PARA O COMPONENTE */}
         <PrimaryNavButton
           titulo="Criar Conta"
-          onPress={() => { /* Navegação para a tela de registro */ }}
+          onPress={() => { navigation.navigate('Register'); }}
           style={secondaryButtonStyles}
           textStyle={secondaryButtonTextStyles}
         />
