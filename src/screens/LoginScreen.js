@@ -1,28 +1,29 @@
-import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, Image } from 'react-native';
-import ImputText from '../components/ImputText';
-import SecondLink from '../components/SecondLink';
-import PrimaryNavButton from '../components/PrimaryNavButton';
-import SocialButton from '../components/SocialButton';
+import React from "react";
+import { View, Text, StyleSheet, SafeAreaView, Image } from "react-native";
+// IMPORTAÇÕES CORRETAS AQUI
+import AntDesign from "react-native-vector-icons/AntDesign";
+import ImputText from "../components/ImputText";
+import SecondLink from "../components/SecondLink";
+import PrimaryNavButton from "../components/PrimaryNavButton";
+import SocialButton from "../components/SocialButton"; // LINHA QUE FALTAVA
 
 const LoginScreen = ({ navigation }) => {
-  // AQUI VOCÊ DEFINE O ESTILO ESPECÍFICO DA VARIANTE.
   const secondaryButtonStyles = {
-    backgroundColor: 'transparent',
-    borderColor: '#17D689',
+    backgroundColor: "transparent",
+    borderColor: "#17D689",
     borderWidth: 1,
     marginTop: 20,
   };
-  
+
   const secondaryButtonTextStyles = {
-    color: '#17D689',
+    color: "#17D689",
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.contentContainer}>
         <Image
-          source={require('../assets/images/FingoText.png')}
+          source={require("../assets/images/FingoText.png")}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -33,19 +34,24 @@ const LoginScreen = ({ navigation }) => {
         <View style={styles.forgotPasswordContainer}>
           <SecondLink
             titulo="Esqueci minha senha"
-            onPress={() => { /* Lógica de recuperação de senha */ }}
+            onPress={() => {
+              /* Lógica de recuperação de senha */
+            }}
           />
         </View>
 
         <PrimaryNavButton
           titulo="Entrar"
-          onPress={() => { /* Lógica de login aqui */ }}
+          onPress={() => {
+            /* Lógica de login aqui */
+          }}
         />
 
-        {/* E AQUI VOCÊ PASSA ESSE ESTILO COMO UMA PROP PARA O COMPONENTE */}
         <PrimaryNavButton
           titulo="Criar Conta"
-          onPress={() => { /* Navegação para a tela de registro */ }}
+          onPress={() => {
+            /* Navegação para a tela de registro */
+          }}
           style={secondaryButtonStyles}
           textStyle={secondaryButtonTextStyles}
         />
@@ -53,10 +59,16 @@ const LoginScreen = ({ navigation }) => {
         <Text style={styles.separator}>ou</Text>
 
         <View style={styles.socialButtonsContainer}>
-          <SocialButton onPress={() => {}} iconSource={require('../assets/images/google.svg')} />
-          <SocialButton onPress={() => {}} iconSource={require('../assets/images/apple.svg')} />
+          <SocialButton onPress={() => {}}>
+            <Image
+              source={require("../assets/images/googleLogo.png")}
+              style={styles.socialIcon}
+            />
+          </SocialButton>
+          <SocialButton onPress={() => {}}>
+            <AntDesign name="apple1" size={30} color="#000" />
+          </SocialButton>
         </View>
-        
       </View>
     </SafeAreaView>
   );
@@ -65,12 +77,12 @@ const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: "white",
   },
   contentContainer: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 12,
     gap: 15,
   },
@@ -80,19 +92,24 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   forgotPasswordContainer: {
-    width: '100%',
-    alignItems: 'flex-end',
+    width: "100%",
+    alignItems: "flex-end",
     marginBottom: 20,
     paddingRight: 10,
   },
   separator: {
     fontSize: 16,
-    color: '#999',
+    color: "#999",
     marginVertical: 20,
   },
   socialButtonsContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 15,
+  },
+  socialIcon: {
+    width: 30,
+    height: 30,
+    resizeMode: 'contain',
   },
 });
 
