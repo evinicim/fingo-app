@@ -5,6 +5,7 @@ import OnboardingScreen from '../screens/OnboardingScreen';
 import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
+import PasswordRecoveryScreen from '../screens/PasswordRecoveryScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -19,12 +20,18 @@ const AppNavigator = () => {
       <Stack.Screen 
         name="Login" 
         component={LoginScreen} 
-        options={{ headerShown: false }} // Mostra o cabeçalho nesta tela
+        options={{ headerShown: false }}
       />
-      <Stack.Screen
-        name="Register"
+      <Stack.Screen 
+        name="Register" 
         component={RegisterScreen}
         options={{ headerShown: false }} // Esconde o cabeçalho nesta tela
+      />
+      {/* Adicione a tela de recuperação de senha aqui */}
+      <Stack.Screen
+        name="PasswordRecovery"
+        component={PasswordRecoveryScreen}
+        options={{ headerShown: false }} // Você pode optar por mostrar o cabeçalho aqui
       />
       <Stack.Screen name="Home" component={HomeScreen} />
     </Stack.Navigator>

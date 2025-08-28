@@ -37,7 +37,7 @@ const RegisterScreen = ({ navigation }) => {
 
           <Text style={styles.title}>Crie sua conta</Text>
           <Text style={styles.subtitle}>
-            estudea organizar suas finanças de forma simples e rápida.
+            estudar e organizar suas finanças de forma simples e rápida.
           </Text>
 
           {/* Container para os campos de formulário */}
