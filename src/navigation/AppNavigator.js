@@ -6,6 +6,7 @@ import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import PasswordRecoveryScreen from '../screens/PasswordRecoveryScreen';
+import PasswordResetScreen from '../screens/PasswordResetScreen'; // <- Verifique se esta linha está aqui
 
 const Stack = createNativeStackNavigator();
 
@@ -15,7 +16,7 @@ const AppNavigator = () => {
       <Stack.Screen 
         name="Onboarding" 
         component={OnboardingScreen} 
-        options={{ headerShown: false }} // Esconde o cabeçalho nesta tela
+        options={{ headerShown: false }}
       />
       <Stack.Screen 
         name="Login" 
@@ -25,13 +26,17 @@ const AppNavigator = () => {
       <Stack.Screen 
         name="Register" 
         component={RegisterScreen}
-        options={{ headerShown: false }} // Esconde o cabeçalho nesta tela
+        options={{ headerShown: false }}
       />
-      {/* Adicione a tela de recuperação de senha aqui */}
       <Stack.Screen
         name="PasswordRecovery"
         component={PasswordRecoveryScreen}
-        options={{ headerShown: false }} // Você pode optar por mostrar o cabeçalho aqui
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="PasswordReset"
+        component={PasswordResetScreen} // <- E se esta linha está correta
+        options={{ headerShown: false }}
       />
       <Stack.Screen name="Home" component={HomeScreen} />
     </Stack.Navigator>

@@ -14,7 +14,7 @@ const PasswordRecoveryScreen = ({ navigation }) => {
         <ImputText placeholder="E-mail" />
         <PrimaryNavButton
           titulo="Enviar"
-          onPress={() => { /* Lógica de envio */ }}
+          onPress={() => navigation.navigate('PasswordReset')}
           style={styles.sendButton}
           textStyle={styles.sendButtonText}
         />
