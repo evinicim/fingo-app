@@ -1,11 +1,10 @@
 import React from "react";
 import { View, Text, StyleSheet, SafeAreaView, Image } from "react-native";
-// IMPORTAÇÕES CORRETAS AQUI
-import AntDesign from "react-native-vector-icons/AntDesign";
 import ImputText from "../components/ImputText";
-import SecondLink from "../components/SecondLink";
 import PrimaryNavButton from "../components/PrimaryNavButton";
-import SocialButton from "../components/SocialButton"; // LINHA QUE FALTAVA
+import SecondLink from "../components/SecondLink";
+import SocialButton from "../components/SocialButton";
+import AntDesign from "react-native-vector-icons/AntDesign";
 
 const LoginScreen = ({ navigation }) => {
   const secondaryButtonStyles = {
@@ -17,6 +16,16 @@ const LoginScreen = ({ navigation }) => {
 
   const secondaryButtonTextStyles = {
     color: "#17D689",
+  };
+
+  const mockLogin = () => {
+    return true;
+  };
+
+  const handleLogin = () => {
+    if (mockLogin()) {
+      navigation.navigate("Main", { screen: "Home" });
+    }
   };
 
   return (
@@ -34,22 +43,22 @@ const LoginScreen = ({ navigation }) => {
         <View style={styles.forgotPasswordContainer}>
           <SecondLink
             titulo="Esqueci minha senha"
-            onPress={() => { navigation.navigate('PasswordRecovery'); }}
-          style={secondaryButtonStyles}
-          textStyle={secondaryButtonTextStyles}
+            onPress={() => {
+              navigation.navigate("PasswordRecovery");
+            }}
           />
         </View>
 
         <PrimaryNavButton
           titulo="Entrar"
-          onPress={() => {
-            /* Lógica de login aqui */
-          }}
+          onPress={handleLogin}
         />
 
         <PrimaryNavButton
           titulo="Criar Conta"
-          onPress={() => { navigation.navigate('Register'); }}
+          onPress={() => {
+            navigation.navigate("Register");
+          }}
           style={secondaryButtonStyles}
           textStyle={secondaryButtonTextStyles}
         />
@@ -107,7 +116,7 @@ const styles = StyleSheet.create({
   socialIcon: {
     width: 30,
     height: 30,
-    resizeMode: 'contain',
+    resizeMode: "contain",
   },
 });
 

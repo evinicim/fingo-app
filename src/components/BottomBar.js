@@ -1,10 +1,15 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const BottomBar = ({ children }) => {
+  const insets = useSafeAreaInsets();
   return (
-    <View style={styles.container}>
-      {children}
+    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
+      <View style={styles.topLine} />
+      <View style={styles.content}>
+        {children}
+      </View>
     </View>
   );
 };
@@ -14,14 +19,25 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 93,
     backgroundColor: 'white',
-    borderTopWidth: 2,
-    borderTopColor: '#17D689',
     position: 'absolute',
     bottom: 0,
+    alignItems: 'center',
+  },
+  topLine: {
+    width: '100%',
+    height: 2,
+    backgroundColor: '#17D689',
+    position: 'absolute',
+    top: 0,
+  },
+  content: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
     paddingHorizontal: 16,
+    width: '100%',
+    height: '100%',
+    paddingTop: 16,
   },
 });
 

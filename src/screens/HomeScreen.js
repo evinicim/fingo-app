@@ -1,18 +1,46 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, Image, ScrollView } from 'react-native';
+import { TRILHAS_MOCADAS } from '../data/mockdata';
+// Remova as importações de BottomBar e TabItem
+import TrilhaItem from '../components/TrilhaItem';
 
-const HomeScreen = () => {
+const HomeScreen = ({ navigation }) => {
+  const trilhasInvertidas = [...TRILHAS_MOCADAS].reverse();
+
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Tela Principal (Home)</Text>
-      <Text>Aqui ficará o conteúdo principal do app!</Text>
+      <ScrollView contentContainerStyle={styles.trilhasContainer}>
+        <View style={styles.linhaCentral} />
+        
+        {trilhasInvertidas.map((trilha, index) => (
+          <TrilhaItem
+            key={trilha.id}
+            trilha={trilha}
+            alignRight={index % 2 !== 0}
+          />
+        ))}
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 10 },
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  trilhasContainer: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  linhaCentral: {
+    position: 'absolute',
+    width: 4,
+    backgroundColor: '#FFD700',
+    height: '100%',
+    top: 0,
+    zIndex: -1,
+  },
 });
 
 export default HomeScreen;
