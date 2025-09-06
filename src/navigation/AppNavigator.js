@@ -15,7 +15,7 @@ import RegisterScreen from "../screens/RegisterScreen";
 import PasswordRecoveryScreen from "../screens/PasswordRecoveryScreen";
 import PasswordResetScreen from "../screens/PasswordResetScreen";
 import HomeScreen from "../screens/HomeScreen";
-import HistoriaScreen from "../screens/HistoriaScreen";
+import DesafiosScreen from "../screens/DesafiosScreen";
 import PerfilScreen from "../screens/PerfilScreen";
 
 const Stack = createNativeStackNavigator();
@@ -42,12 +42,12 @@ function MainTabNavigator() {
         }}
       />
       <Tab.Screen
-        name="História"
-        component={HistoriaScreen}
+        name="Desafios"
+        component={DesafiosScreen}
         options={{
-          tabBarLabel: ({ color }) => <Text style={{ color }}>História</Text>,
+          tabBarLabel: ({ color }) => <Text style={{ color }}>Desafios</Text>,
           tabBarIcon: ({ color, size }) => (
-            <AntDesign name="book" size={size} color={color} />
+            <AntDesign name="questioncircleo" size={size} color={color} />
           ),
         }}
       />
