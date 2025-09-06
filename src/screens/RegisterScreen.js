@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -9,28 +9,30 @@ import {
   KeyboardAvoidingView,
   Platform,
   Dimensions,
-} from 'react-native';
-import ImputText from '../components/ImputText';
-import SecondLink from '../components/SecondLink';
-import PrimaryNavButton from '../components/PrimaryNavButton';
+} from "react-native";
+import ImputText from "../components/ImputText";
+import SecondLink from "../components/SecondLink";
+import PrimaryNavButton from "../components/PrimaryNavButton";
 
 const RegisterScreen = ({ navigation }) => {
   // Por enquanto, a lógica ficará vazia. Focaremos na UI.
   const handleRegister = () => {
-    console.log('Botão de cadastro pressionado!');
+    console.log("Botão de cadastro pressionado!");
     // A lógica de autenticação com Firebase virá aqui depois.
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardAvoiding}>
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardAvoiding}
+      >
         <ScrollView
           contentContainerStyle={styles.container}
-          keyboardShouldPersistTaps="handled">
+          keyboardShouldPersistTaps="handled"
+        >
           <Image
-            source={require('../assets/images/FingoText.png')}
+            source={require("../assets/images/FingoText.png")}
             style={styles.logo}
             resizeMode="contain"
           />
@@ -57,7 +59,7 @@ const RegisterScreen = ({ navigation }) => {
           <View style={styles.loginLinkContainer}>
             <SecondLink
               titulo="Já tem uma conta? Faça login"
-              onPress={() => navigation.navigate('Login')} // Navega de volta para o Login
+              onPress={() => navigation.navigate("Login")} // Navega de volta para o Login
             />
           </View>
         </ScrollView>
@@ -66,20 +68,20 @@ const RegisterScreen = ({ navigation }) => {
   );
 };
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   keyboardAvoiding: {
     flex: 1,
   },
   container: {
     flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 30,
   },
@@ -89,20 +91,20 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   formContainer: {
-    width: '100%',
+    width: "100%",
     // Adiciona um espaçamento consistente entre os itens do formulário
     gap: 15,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
     marginBottom: 30,
   },
   loginLinkContainer: {

@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, Image, ScrollView } from 'react-native';
 import { TRILHAS_MOCADAS } from '../data/mockdata';
-// Remova as importações de BottomBar e TabItem
 import TrilhaItem from '../components/TrilhaItem';
 
 const HomeScreen = ({ navigation }) => {
@@ -11,7 +10,6 @@ const HomeScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.trilhasContainer}>
         <View style={styles.linhaCentral} />
-        
         {trilhasInvertidas.map((trilha, index) => (
           <TrilhaItem
             key={trilha.id}

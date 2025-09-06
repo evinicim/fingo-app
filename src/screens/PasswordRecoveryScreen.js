@@ -25,16 +25,6 @@ const PasswordRecoveryScreen = ({ navigation }) => {
         />
         <Text style={styles.successMessage}>Você recebera um e-mail com os próximos passos.</Text>
       </View>
-
-      {/* 
-        Asaph, comentei a BottomBar temporariamente pois ela não deve aparecer nesta tela.
-        <BottomBar>
-          <TabItem titulo="Home" iconName="home" onPress={() => navigation.navigate('Home')} />
-          <TabItem titulo="História" iconName="book" onPress={() => {}} />
-          <TabItem titulo="Conquistas" iconName="trophy" onPress={() => {}} />
-          <TabItem titulo="Perfil" iconName="user" onPress={() => {}} />
-        </BottomBar>
-      */}
     </SafeAreaView>
   );
 };

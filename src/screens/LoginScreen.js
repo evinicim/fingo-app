@@ -63,7 +63,10 @@ const LoginScreen = ({ navigation }) => {
           textStyle={secondaryButtonTextStyles}
         />
 
-        <Text style={styles.separator}>ou</Text>
+        {/* CÓDIGO CORRIGIDO AQUI: O componente Text foi envolvido por uma View */}
+        <View>
+          <Text style={styles.separator}>ou</Text>
+        </View>
 
         <View style={styles.socialButtonsContainer}>
           <SocialButton onPress={() => {}}>
