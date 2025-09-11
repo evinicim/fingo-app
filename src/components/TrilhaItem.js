@@ -1,22 +1,24 @@
-import React from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
+import React from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 
-const TrilhaItem = ({ trilha, alignRight }) => {
+const TrilhaItem = ({ trilha, alignment }) => {
+  let alignmentStyle;
+  if (alignment === 0) {
+    alignmentStyle = styles.alignLeft;
+  } else if (alignment === 1) {
+    alignmentStyle = styles.alignCenter;
+  } else {
+    alignmentStyle = styles.alignRight;
+  }
+
   return (
-    <View
-      style={[
-        styles.trilhaContainer,
-        alignRight ? styles.itemRight : styles.itemLeft,
-      ]}
-    >
+    <View style={[styles.trilhaContainer, alignmentStyle]}>
+      <Text style={styles.titulo}>{trilha.titulo}</Text>
       <TouchableOpacity
-        style={[styles.itemContent, trilha.bloqueada && styles.itemBloqueado]}
+        style={[styles.circularButton, trilha.bloqueada && styles.itemBloqueado]}
         disabled={trilha.bloqueada}
       >
         <Image source={trilha.icone} style={styles.icone} />
-        <View style={{ flex: 1, justifyContent: "center" }}>
-          <Text style={styles.titulo}>{trilha.titulo}</Text>
-        </View>
       </TouchableOpacity>
     </View>
   );
@@ -24,41 +26,40 @@ const TrilhaItem = ({ trilha, alignRight }) => {
 
 const styles = StyleSheet.create({
   trilhaContainer: {
-    width: "100%",
+    width: 250, // Demos uma largura fixa para que o alinhamento faça sentido
     marginBottom: 50,
+    alignItems: 'center',
   },
-  itemLeft: {
-    alignItems: "flex-start",
-    paddingLeft: 20,
+  alignLeft: {
+    alignSelf: 'flex-start',
   },
-  itemRight: {
-    alignItems: "flex-end",
-    paddingRight: 20,
+  alignCenter: {
+    alignSelf: 'center',
   },
-  itemContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 10,
-    borderRadius: 50,
-    backgroundColor: "#f6f6f6ff",
-    width: 250,
+  alignRight: {
+    alignSelf: 'flex-end',
+  },
+  titulo: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    width: 150,
+    textAlign: 'center',
+  },
+  circularButton: {
+    width: 100,
     height: 100,
-    borderWidth: 0,
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f6f6f6ff',
   },
   itemBloqueado: {
-    borderColor: "#999",
-    backgroundColor: "#d5d5d5ff",
+    backgroundColor: '#d5d5d5ff',
   },
   icone: {
     width: 60,
     height: 60,
-    marginRight: 10,
-  },
-  titulo: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: "bold",
-    textAlign: "right",
   },
 });
 

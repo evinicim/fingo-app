@@ -1,22 +1,21 @@
-import React from "react";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { View, Text } from "react-native";
+import React from 'react';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { View, Text } from 'react-native';
 
 // IMPORTAÇÕES CORRETAS DOS ÍCONES
-import AntDesign from "react-native-vector-icons/AntDesign";
-// O MaterialCommunityIcons foi removido pois não vamos mais usar o ícone de troféu aqui
-// import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 // Importe todas as telas
-import OnboardingScreen from "../screens/OnboardingScreen";
-import LoginScreen from "../screens/LoginScreen";
-import RegisterScreen from "../screens/RegisterScreen";
-import PasswordRecoveryScreen from "../screens/PasswordRecoveryScreen";
-import PasswordResetScreen from "../screens/PasswordResetScreen";
-import HomeScreen from "../screens/HomeScreen";
-import DesafiosScreen from "../screens/DesafiosScreen";
-import PerfilScreen from "../screens/PerfilScreen";
+import OnboardingScreen from '../screens/OnboardingScreen';
+import LoginScreen from '../screens/LoginScreen';
+import RegisterScreen from '../screens/RegisterScreen';
+import PasswordRecoveryScreen from '../screens/PasswordRecoveryScreen';
+import PasswordResetScreen from '../screens/PasswordResetScreen';
+import HomeScreen from '../screens/HomeScreen';
+import DesafiosScreen from '../screens/DesafiosScreen';
+import PerfilScreen from '../screens/PerfilScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -27,35 +26,36 @@ function MainTabNavigator() {
     <Tab.Navigator
       initialRouteName="Home"
       screenOptions={{
-        tabBarActiveTintColor: "#17D689",
+        tabBarActiveTintColor: '#17D689',
         headerShown: false,
       }}
     >
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
+      <Tab.Screen 
+        name="Home" 
+        component={HomeScreen} 
         options={{
-          tabBarLabel: ({ color }) => <Text style={{ color }}>Home</Text>,
+          tabBarLabel: 'Home',
           tabBarIcon: ({ color, size }) => (
             <AntDesign name="home" size={size} color={color} />
           ),
         }}
       />
-      <Tab.Screen
-        name="Desafios"
-        component={DesafiosScreen}
+      <Tab.Screen 
+        name="Desafios" 
+        component={DesafiosScreen} 
         options={{
-          tabBarLabel: ({ color }) => <Text style={{ color }}>Desafios</Text>,
+          tabBarLabel: 'Desafios',
           tabBarIcon: ({ color, size }) => (
-            <AntDesign name="questioncircleo" size={size} color={color} />
+            // Ícone alterado para bullseye-arrow do MaterialCommunityIcons
+            <MaterialCommunityIcons name="bullseye-arrow" size={size} color={color} />
           ),
         }}
       />
-      <Tab.Screen
-        name="Perfil"
+      <Tab.Screen 
+        name="Perfil" 
         component={PerfilScreen}
         options={{
-          tabBarLabel: ({ color }) => <Text style={{ color }}>Perfil</Text>,
+          tabBarLabel: 'Perfil',
           tabBarIcon: ({ color, size }) => (
             <AntDesign name="user" size={size} color={color} />
           ),
@@ -67,17 +67,11 @@ function MainTabNavigator() {
 
 const AppNavigator = () => {
   return (
-    <Stack.Navigator
-      initialRouteName="Onboarding"
-      screenOptions={{ headerShown: false }}
-    >
+    <Stack.Navigator initialRouteName="Onboarding" screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Onboarding" component={OnboardingScreen} />
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
-      <Stack.Screen
-        name="PasswordRecovery"
-        component={PasswordRecoveryScreen}
-      />
+      <Stack.Screen name="PasswordRecovery" component={PasswordRecoveryScreen} />
       <Stack.Screen name="PasswordReset" component={PasswordResetScreen} />
       <Stack.Screen name="Main" component={MainTabNavigator} />
     </Stack.Navigator>

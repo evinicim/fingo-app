@@ -4,17 +4,17 @@ import { TRILHAS_MOCADAS } from '../data/mockdata';
 import TrilhaItem from '../components/TrilhaItem';
 
 const HomeScreen = ({ navigation }) => {
-  const trilhasInvertidas = [...TRILHAS_MOCADAS].reverse();
+  const trilhasInvertidas = [...TRILHAS_MOCADAS];
+  const alignmentPattern = [0, 1, 2, 1];
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.trilhasContainer}>
-        <View style={styles.linhaCentral} />
         {trilhasInvertidas.map((trilha, index) => (
           <TrilhaItem
             key={trilha.id}
             trilha={trilha}
-            alignRight={index % 2 !== 0}
+            alignment={alignmentPattern[index % alignmentPattern.length]}
           />
         ))}
       </ScrollView>
@@ -30,14 +30,8 @@ const styles = StyleSheet.create({
   trilhasContainer: {
     alignItems: 'center',
     paddingVertical: 20,
-  },
-  linhaCentral: {
-    position: 'absolute',
-    width: 4,
-    backgroundColor: '#FFD700',
-    height: '100%',
-    top: 0,
-    zIndex: -1,
+    paddingBottom: 93,
+    position: 'relative',
   },
 });
 
