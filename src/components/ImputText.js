@@ -3,7 +3,7 @@ import { StyleSheet, TextInput, View, TouchableOpacity } from 'react-native';
 // Importamos os ícones que precisamos
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-const ImputText = ({ placeholder, secureTextEntry }) => {
+const ImputText = ({ placeholder, secureTextEntry, value, onChangeText, keyboardType, autoCapitalize }) => {
   // Criamos um estado para controlar se a senha é visível ou não
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
@@ -18,6 +18,10 @@ const ImputText = ({ placeholder, secureTextEntry }) => {
         placeholderTextColor="#999"
         // A propriedade secureTextEntry agora depende do nosso estado
         secureTextEntry={isPasswordField && !isPasswordVisible}
+        value={value}
+        onChangeText={onChangeText}
+        keyboardType={keyboardType}
+        autoCapitalize={autoCapitalize}
       />
       
       {isPasswordField && (

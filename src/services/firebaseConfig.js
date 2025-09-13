@@ -1,11 +1,8 @@
 import { initializeApp } from 'firebase/app';
-
-// Adicione os serviços que for usar, ex: getAuth, getFirestore
-import { getAuth } from "firebase/auth";
-// import { getFirestore } from "firebase/firestore";
+import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 
 // Configuração do Firebase do seu projeto web
-// NUNCA coloque as chaves diretamente aqui. Use variáveis de ambiente!
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -19,6 +16,7 @@ const firebaseConfig = {
 // Inicializa o Firebase
 const app = initializeApp(firebaseConfig);
 
-// Exporte os serviços que você inicializou para usar no resto do app
-export const auth = getAuth(app);
-// export const db = getFirestore(app);
+// Inicializa o Auth com persistência
+export const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(ReactNativeAsyncStorage)
+});
