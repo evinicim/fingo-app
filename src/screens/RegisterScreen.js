@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -9,16 +9,37 @@ import {
   KeyboardAvoidingView,
   Platform,
   Dimensions,
+  Alert,
 } from "react-native";
 import ImputText from "../components/ImputText";
 import SecondLink from "../components/SecondLink";
 import PrimaryNavButton from "../components/PrimaryNavButton";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../services/firebaseConfig";
 
 const RegisterScreen = ({ navigation }) => {
-  // Por enquanto, a lógica ficará vazia. Focaremos na UI.
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
   const handleRegister = () => {
-    console.log("Botão de cadastro pressionado!");
-    // A lógica de autenticação com Firebase virá aqui depois.
+    if (password !== confirmPassword) {
+      Alert.alert("Erro", "As senhas não coincidem.");
+      return;
+    }
+
+    createUserWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        // Signed in
+        const user = userCredential.user;
+        console.log("Usuário cadastrado:", user.email);
+        navigation.navigate("Main", { screen: "Home" });
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        Alert.alert("Erro no cadastro", errorMessage);
+      });
   };
 
   return (
@@ -49,9 +70,21 @@ const RegisterScreen = ({ navigation }) => {
               placeholder="Email"
               keyboardType="email-address"
               autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
             />
-            <ImputText placeholder="Senha" secureTextEntry />
-            <ImputText placeholder="Confirmar senha" secureTextEntry />
+            <ImputText
+              placeholder="Senha"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
+            <ImputText
+              placeholder="Confirmar senha"
+              secureTextEntry
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+            />
 
             <PrimaryNavButton titulo="Cadastrar" onPress={handleRegister} />
           </View>

@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
+
 // Adicione os serviços que for usar, ex: getAuth, getFirestore
-// import { getAuth } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 // import { getFirestore } from "firebase/firestore";
 
 // Configuração do Firebase do seu projeto web
@@ -12,11 +13,12 @@ const firebaseConfig = {
   storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
 // Inicializa o Firebase
 const app = initializeApp(firebaseConfig);
 
 // Exporte os serviços que você inicializou para usar no resto do app
-// export const auth = getAuth(app);
+export const auth = getAuth(app);
 // export const db = getFirestore(app);

@@ -1,20 +1,39 @@
-import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, Image, Alert } from 'react-native';
 import ImputText from '../components/ImputText';
 import PrimaryNavButton from '../components/PrimaryNavButton';
-import BottomBar from '../components/BottomBar';
-import TabItem from '../components/TabItem';
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "../services/firebaseConfig";
 
 const PasswordRecoveryScreen = ({ navigation }) => {
+  const [email, setEmail] = useState("");
+
+  const handlePasswordReset = () => {
+    sendPasswordResetEmail(auth, email)
+      .then(() => {
+        Alert.alert("E-mail enviado", "Verifique sua caixa de entrada para as instruções de redefinição de senha.");
+        navigation.navigate('Login');
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        Alert.alert("Erro", errorMessage);
+      });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.mainContent}>
         <Text style={styles.title}>Recuperar Senha</Text>
         <Text style={styles.subtitle}>Digite seu e-mail abaixo e enviaremos instruções para redefinir sua senha.</Text>
-        <ImputText placeholder="E-mail" />
+        <ImputText
+          placeholder="E-mail"
+          value={email}
+          onChangeText={setEmail}
+        />
         <PrimaryNavButton
           titulo="Enviar"
-          onPress={() => navigation.navigate('PasswordReset')}
+          onPress={handlePasswordReset}
           style={styles.sendButton}
           textStyle={styles.sendButtonText}
         />
