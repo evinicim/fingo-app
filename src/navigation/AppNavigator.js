@@ -15,7 +15,7 @@ import PasswordRecoveryScreen from '../screens/PasswordRecoveryScreen';
 import PasswordResetScreen from '../screens/PasswordResetScreen';
 import HomeScreen from '../screens/HomeScreen';
 import DesafiosScreen from '../screens/DesafiosScreen';
-import PerfilScreen from '../screens/PerfilScreen';
+import PerfilScreen from '../screens/PerfilScreen'; // Note o nome corrigido aqui
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
