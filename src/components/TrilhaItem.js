@@ -1,11 +1,25 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions } from 'react-native';
 import { AntDesign, MaterialIcons } from '@expo/vector-icons';
+// Funções de responsividade personalizadas
+const wp = (percentage) => {
+  const { width } = Dimensions.get('window');
+  return (percentage * width) / 100;
+};
+
+const hp = (percentage) => {
+  const { height } = Dimensions.get('window');
+  return (percentage * height) / 100;
+};
 
 const TrilhaItem = ({ trilha, onPress }) => {
   const { width: screenWidth } = Dimensions.get('window');
   const isSmallScreen = screenWidth < 375;
   const isMediumScreen = screenWidth >= 375 && screenWidth < 414;
+  
+  // Animações
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
   
   const getTrilhaState = () => {
     if (trilha.bloqueada) return 'locked';
@@ -17,33 +31,79 @@ const TrilhaItem = ({ trilha, onPress }) => {
   const state = getTrilhaState();
   const styles = createResponsiveStyles(isSmallScreen, isMediumScreen);
   
+  // Animação de pulso para trilhas disponíveis
+  useEffect(() => {
+    if (state === 'available') {
+      const pulseAnimation = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.05,
+            duration: 1500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 1500,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      pulseAnimation.start();
+    }
+  }, [state]);
+
   const getButtonColors = () => {
     switch (state) {
       case 'completed':
-        return { bg: '#FF9500', border: '#FFD700' };
+        return { 
+          bg: '#58CC02', 
+          border: '#46B302',
+          shadow: '#58CC02',
+          gradient: ['#58CC02', '#46B302']
+        };
       case 'in_progress':
-        return { bg: '#4A90E2', border: '#357ABD' };
+        return { 
+          bg: '#4A90E2', 
+          border: '#357ABD',
+          shadow: '#4A90E2',
+          gradient: ['#4A90E2', '#357ABD']
+        };
       case 'available':
-        return { bg: '#17D689', border: '#0AD58B' };
+        return { 
+          bg: '#FFD700', 
+          border: '#FFC107',
+          shadow: '#FFD700',
+          gradient: ['#FFD700', '#FFC107']
+        };
       case 'locked':
-        return { bg: '#E0E0E0', border: '#BDBDBD' };
+        return { 
+          bg: '#E0E0E0', 
+          border: '#BDBDBD',
+          shadow: '#E0E0E0',
+          gradient: ['#E0E0E0', '#BDBDBD']
+        };
       default:
-        return { bg: '#17D689', border: '#0AD58B' };
+        return { 
+          bg: '#FFD700', 
+          border: '#FFC107',
+          shadow: '#FFD700',
+          gradient: ['#FFD700', '#FFC107']
+        };
     }
   };
 
   const getIconName = () => {
     switch (state) {
       case 'completed':
-        return 'check';
+        return 'check-circle';
       case 'in_progress':
-        return 'play-arrow';
+        return 'play-circle-filled';
       case 'available':
-        return 'play-arrow';
+        return 'play-circle-outline';
       case 'locked':
         return 'lock';
       default:
-        return 'play-arrow';
+        return 'play-circle-outline';
     }
   };
 
@@ -54,12 +114,26 @@ const TrilhaItem = ({ trilha, onPress }) => {
       case 'in_progress':
         return '#FFFFFF';
       case 'available':
-        return '#17D689';
+        return '#1A1A1A';
       case 'locked':
         return '#999999';
       default:
-        return '#17D689';
+        return '#1A1A1A';
     }
+  };
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.95,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
   };
 
   return (
@@ -68,77 +142,101 @@ const TrilhaItem = ({ trilha, onPress }) => {
         {trilha.titulo}
       </Text>
       
-      <TouchableOpacity
+      <Animated.View
         style={[
-          styles.circularButton, 
+          styles.buttonContainer,
           {
-            backgroundColor: getButtonColors().bg,
-            borderColor: getButtonColors().border,
+            transform: [
+              { scale: scaleAnim },
+              { scale: state === 'available' ? pulseAnim : 1 }
+            ]
           }
         ]}
-        disabled={trilha.bloqueada}
-        onPress={() => onPress && onPress(trilha)}
-        activeOpacity={0.8}
       >
-        <MaterialIcons 
-          name={getIconName()} 
-          size={isSmallScreen ? 28 : isMediumScreen ? 32 : 36} 
-          color={getIconColor()} 
-        />
+        <TouchableOpacity
+          style={[
+            styles.circularButton, 
+            {
+              backgroundColor: getButtonColors().bg,
+              borderColor: getButtonColors().border,
+              shadowColor: getButtonColors().shadow,
+            }
+          ]}
+          disabled={trilha.bloqueada}
+          onPress={() => onPress && onPress(trilha)}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          activeOpacity={0.8}
+        >
+          <MaterialIcons 
+            name={getIconName()} 
+            size={28} 
+            color={getIconColor()} 
+          />
+          
+          {state === 'in_progress' && (
+            <View style={styles.progressIndicator}>
+              <View 
+                style={[
+                  styles.progressFill, 
+                  { width: `${trilha.progresso}%` }
+                ]} 
+              />
+            </View>
+          )}
+        </TouchableOpacity>
         
-        {state === 'in_progress' && (
-          <View style={styles.progressIndicator}>
-            <View 
-              style={[
-                styles.progressFill, 
-                { width: `${trilha.progresso}%` }
-              ]} 
-            />
+        {/* Badges de conquista */}
+        {state === 'completed' && (
+          <View style={styles.completedBadge}>
+            <AntDesign name="star" size={14} color="#FFD700" />
           </View>
         )}
-      </TouchableOpacity>
-      
-      {state === 'completed' && (
-        <View style={styles.completedBadge}>
-          <AntDesign name="star" size={12} color="#FFD700" />
-        </View>
-      )}
+        
+        {state === 'in_progress' && (
+          <View style={styles.progressBadge}>
+            <Text style={styles.progressText}>{trilha.progresso}%</Text>
+          </View>
+        )}
+      </Animated.View>
     </View>
   );
 };
 
 const createResponsiveStyles = (isSmallScreen, isMediumScreen) => StyleSheet.create({
   trilhaContainer: {
-    width: isSmallScreen ? 120 : isMediumScreen ? 140 : 150, // Largura responsiva
+    width: 120,
     alignItems: 'center',
-    marginBottom: isSmallScreen ? 30 : 40, // Margem inferior ajustada para se conectar
+    marginBottom: 10,
   },
   titulo: {
-    fontSize: isSmallScreen ? 14 : isMediumScreen ? 15 : 16,
-    fontWeight: '600',
-    marginBottom: isSmallScreen ? 12 : 15,
-    width: '100%',
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 8,
     textAlign: 'center',
     fontFamily: 'Outfit-Bold',
-    color: '#000000',
-    lineHeight: isSmallScreen ? 18 : isMediumScreen ? 19 : 20,
+    color: '#1A1A1A',
   },
   lockedText: {
     color: '#999999',
   },
+  buttonContainer: {
+    position: 'relative',
+    alignItems: 'center',
+  },
   circularButton: {
-    width: isSmallScreen ? 90 : isMediumScreen ? 100 : 110,
-    height: isSmallScreen ? 90 : isMediumScreen ? 100 : 110,
-    borderRadius: isSmallScreen ? 45 : isMediumScreen ? 50 : 55,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
-    borderWidth: isSmallScreen ? 4 : 5,
+    borderWidth: 3,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: isSmallScreen ? 6 : 8 },
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
-    shadowRadius: isSmallScreen ? 10 : 15,
-    elevation: isSmallScreen ? 8 : 12,
+    shadowRadius: 6,
+    elevation: 5,
   },
   progressIndicator: {
     position: 'absolute',
@@ -146,19 +244,19 @@ const createResponsiveStyles = (isSmallScreen, isMediumScreen) => StyleSheet.cre
     left: 10,
     right: 10,
     height: 4,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
     borderRadius: 2,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#17D689',
+    backgroundColor: '#FFFFFF',
     borderRadius: 2,
   },
   completedBadge: {
     position: 'absolute',
-    top: -5,
-    right: -5,
+    top: -6,
+    right: -6,
     width: 24,
     height: 24,
     borderRadius: 12,
@@ -167,6 +265,35 @@ const createResponsiveStyles = (isSmallScreen, isMediumScreen) => StyleSheet.cre
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  progressBadge: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#4A90E2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  progressText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    fontFamily: 'Outfit-Bold',
   },
 });
 

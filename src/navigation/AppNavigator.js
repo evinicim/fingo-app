@@ -15,7 +15,10 @@ import PasswordRecoveryScreen from '../screens/PasswordRecoveryScreen';
 import PasswordResetScreen from '../screens/PasswordResetScreen';
 import HomeScreen from '../screens/HomeScreen';
 import DesafiosScreen from '../screens/DesafiosScreen';
-import PerfilScreen from '../screens/PerfilScreen'; // Note o nome corrigido aqui
+import HistoriaScreen from '../screens/HistoriaScreen';
+import QuestaoScreen from '../screens/QuestaoScreen';
+import FeedbackScreen from '../screens/FeedbackScreen';
+import PerfilScreen from '../screens/PerfilScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -74,6 +77,10 @@ const AppNavigator = () => {
       <Stack.Screen name="PasswordRecovery" component={PasswordRecoveryScreen} />
       <Stack.Screen name="PasswordReset" component={PasswordResetScreen} />
       <Stack.Screen name="Main" component={MainTabNavigator} />
+      <Stack.Screen name="Historia" component={HistoriaScreen} />
+      <Stack.Screen name="Desafios" component={DesafiosScreen} />
+      <Stack.Screen name="Questao" component={QuestaoScreen} />
+      <Stack.Screen name="Feedback" component={FeedbackScreen} />
     </Stack.Navigator>
   );
 };

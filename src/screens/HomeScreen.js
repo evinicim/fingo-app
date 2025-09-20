@@ -1,80 +1,170 @@
 // CÓDIGO PARA O ARQUIVO: HomeScreen.js
 
-import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, ActivityIndicator, Alert, Dimensions } from 'react-native';
-import Svg, { Path, Circle } from 'react-native-svg';
-import { useNavigation } from '@react-navigation/native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, ActivityIndicator, Alert, Dimensions, Animated, TouchableOpacity } from 'react-native';
+import Svg, { Path, Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { AntDesign, Feather } from '@expo/vector-icons';
+import { AntDesign, Feather, MaterialIcons } from '@expo/vector-icons';
 import { TRILHAS_MOCADAS } from '../data/mockdata';
-import TrilhaItem from '../components/TrilhaItem'; // Importação correta
+import { getTrilhasWithUnlockStatus, debugTrilhasStatus, resetProgress, simularTrilha1Completa } from '../services/progressService';
+import TrilhaItem from '../components/TrilhaItem';
+// Funções de responsividade simples
+const wp = (percentage) => {
+  const { width } = Dimensions.get('window');
+  return (percentage * width) / 100;
+};
 
-// Componente para linha conectora curva estilo Duolingo
-const CurvedConnector = ({ isCompleted = false, index = 0, screenWidth }) => {
-  // Padrões de linha mais orgânicos como no Duolingo
-  const getPathData = (idx) => {
-    const patterns = [
-      `M 100 0 C 110 20 90 60 100 80`, // Curva suave para a direita
-      `M 100 0 C 90 20 110 60 100 80`, // Curva suave para a esquerda
-      `M 100 0 C 105 25 95 55 100 80`, // Curva sutil para a direita
-      `M 100 0 C 95 25 105 55 100 80`, // Curva sutil para a esquerda
-    ];
-    // Altera o padrão a cada 2 trilhas para um visual mais dinâmico
-    const patternIndex = Math.floor(idx / 2) % patterns.length;
-    return patterns[patternIndex];
+const hp = (percentage) => {
+  const { height } = Dimensions.get('window');
+  return (percentage * height) / 100;
+};
+
+// Componente para linha conectora em zigzag estilo Duolingo
+const ZigzagConnector = ({ isCompleted = false, index = 0, screenWidth, isLeftToRight = true }) => {
+  const getPathData = (isLeftToRight) => {
+    if (isLeftToRight) {
+      return `M 50 0 C 120 20 180 40 250 60 C 320 80 350 100 400 120`;
+    } else {
+      return `M 400 0 C 330 20 270 40 200 60 C 130 80 100 100 50 120`;
+    }
   };
 
-  const pathData = getPathData(index);
-  const strokeColor = isCompleted ? '#17D689' : '#FFD700';
+  const pathData = getPathData(isLeftToRight);
+  const strokeColor = isCompleted ? '#58CC02' : '#FFD700';
 
-  // O componente CurvedConnector PRECISA ter seu próprio StyleSheet
   const styles = StyleSheet.create({
     connectorContainer: {
-      width: screenWidth * 0.5, // Largura responsiva
-      height: 80,
+      width: screenWidth * 0.8,
+      height: 120,
       alignSelf: 'center',
-      marginTop: -30,
-      marginBottom: -30,
+      marginTop: -60,
+      marginBottom: -60,
     },
   });
 
   return (
     <View style={styles.connectorContainer}>
       <Svg height="100%" width="100%">
-        {/* Linha principal curva - mais grossa como no Duolingo */}
+        <Defs>
+          <LinearGradient id="connectorGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <Stop offset="0%" stopColor={strokeColor} stopOpacity="0.8" />
+            <Stop offset="50%" stopColor={strokeColor} stopOpacity="1" />
+            <Stop offset="100%" stopColor={strokeColor} stopOpacity="0.8" />
+          </LinearGradient>
+        </Defs>
+        
+        {/* Linha principal com gradiente */}
         <Path
           d={pathData}
-          stroke={strokeColor}
-          strokeWidth="5"
+          stroke="url(#connectorGradient)"
+          strokeWidth="6"
           fill="none"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
 
-        {/* Pontos decorativos na linha */}
-        <Circle cx="105" cy="30" r="2.5" fill="#4A90E2" />
-        <Circle cx="95" cy="50" r="2" fill="#4A90E2" />
-        <Circle cx="110" cy="45" r="1.5" fill="#4A90E2" />
-
-        {/* Efeito de brilho sutil */}
-        <Path
-          d={pathData}
-          stroke="#FFFFFF"
-          strokeWidth="1"
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          opacity="0.3"
-        />
+        {/* Pontos decorativos animados */}
+        <Circle cx="200" cy="30" r="3" fill="#4A90E2" opacity="0.8" />
+        <Circle cx="300" cy="70" r="2.5" fill="#4A90E2" opacity="0.6" />
+        <Circle cx="150" cy="90" r="2" fill="#4A90E2" opacity="0.4" />
       </Svg>
+    </View>
+  );
+};
+
+// Componente de Header com Streak
+const HeaderWithStreak = ({ userName = "Jovem Financista", streak = 7, onReset, onSimulate }) => {
+  const styles = StyleSheet.create({
+    headerContainer: {
+      backgroundColor: '#58CC02',
+      paddingHorizontal: 20,
+      paddingVertical: 15,
+      borderBottomLeftRadius: 20,
+      borderBottomRightRadius: 20,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 5,
+    },
+    headerContent: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    testButtons: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    testButton: {
+      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    testButtonText: {
+      color: '#FFFFFF',
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    welcomeText: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: '#FFFFFF',
+      fontFamily: 'Outfit-Bold',
+    },
+    streakContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 20,
+    },
+    streakText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: '#FFFFFF',
+      fontFamily: 'Outfit-Bold',
+      marginLeft: 5,
+    },
+  });
+
+  return (
+    <View style={styles.headerContainer}>
+      <View style={styles.headerContent}>
+        <Text style={styles.welcomeText}>Olá, {userName}! 👋</Text>
+        <View style={styles.streakContainer}>
+          <AntDesign name="fire" size={16} color="#FFD700" />
+          <Text style={styles.streakText}>{streak} dias</Text>
+        </View>
+      </View>
+      <View style={styles.testButtons}>
+        <TouchableOpacity style={styles.testButton} onPress={onReset}>
+          <Text style={styles.testButtonText}>Reset</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.testButton} onPress={onSimulate}>
+          <Text style={styles.testButtonText}>Simular T1</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
 
 const HomeScreen = ({ navigation }) => {
   const navigationHook = useNavigation();
-
   const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+  
+  // Estados para animações
+  const [pulseAnimations] = useState(
+    TRILHAS_MOCADAS.map(() => new Animated.Value(1))
+  );
+  
+  // Estados para trilhas com status de desbloqueio
+  const [trilhasComStatus, setTrilhasComStatus] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   const [fontsLoaded] = useFonts({
     'Outfit-Regular': require('../assets/fonts/Outfit-Regular.ttf'),
     'Outfit-Bold': require('../assets/fonts/Outfit-Bold.ttf'),
@@ -82,88 +172,211 @@ const HomeScreen = ({ navigation }) => {
     ...AntDesign.font,
   });
 
-  // Revertemos a ordem das trilhas para começar de baixo para cima
-  const trilhasInvertidas = [...TRILHAS_MOCADAS];
+  // Dados do usuário (simulados)
+  const userData = {
+    name: "Jovem Financista",
+    streak: 7,
+    totalTrilhas: TRILHAS_MOCADAS.length,
+    trilhasConcluidas: trilhasComStatus.filter(t => t.progresso === 100).length,
+    xp: 1250,
+  };
+
+  // Carregar status de desbloqueio das trilhas
+  useEffect(() => {
+    const loadTrilhasStatus = async () => {
+      try {
+        const status = await getTrilhasWithUnlockStatus();
+        setTrilhasComStatus(status);
+        
+        // Debug para verificar status
+        await debugTrilhasStatus();
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('Erro ao carregar status das trilhas:', error);
+        setLoading(false);
+      }
+    };
+    
+    loadTrilhasStatus();
+  }, []);
+
+  // Recarregar status quando a tela ganha foco
+  useFocusEffect(
+    React.useCallback(() => {
+      const reloadStatus = async () => {
+        try {
+          const status = await getTrilhasWithUnlockStatus();
+          setTrilhasComStatus(status);
+        } catch (error) {
+          console.error('Erro ao recarregar status das trilhas:', error);
+        }
+      };
+      
+      reloadStatus();
+    }, [])
+  );
+
+  // Animação de pulso para trilhas disponíveis
+  useEffect(() => {
+    const pulseAnimation = () => {
+      TRILHAS_MOCADAS.forEach((trilha, index) => {
+        if (!trilha.bloqueada && trilha.progresso === 0) {
+          Animated.loop(
+            Animated.sequence([
+              Animated.timing(pulseAnimations[index], {
+                toValue: 1.1,
+                duration: 1000,
+                useNativeDriver: true,
+              }),
+              Animated.timing(pulseAnimations[index], {
+                toValue: 1,
+                duration: 1000,
+                useNativeDriver: true,
+              }),
+            ])
+          ).start();
+        }
+      });
+    };
+
+    if (fontsLoaded) {
+      pulseAnimation();
+    }
+  }, [fontsLoaded]);
 
   const handleTrilhaPress = (trilha) => {
-    if (trilha.bloqueada) {
+    // Verificar se a trilha está desbloqueada
+    const trilhaStatus = trilhasComStatus.find(t => t.id === trilha.id);
+    
+    if (!trilhaStatus?.desbloqueada) {
       Alert.alert(
-        "Trilha Bloqueada", 
+        "🔒 Trilha Bloqueada", 
         "Complete a trilha anterior para desbloquear esta trilha!",
-        [{ text: "OK" }]
+        [{ text: "Entendi", style: "default" }]
       );
       return;
     }
     
-    Alert.alert(
-      "Iniciar Trilha", 
-      `Você está prestes a começar: ${trilha.titulo}`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        { text: "Começar", onPress: () => console.log("Iniciando trilha:", trilha.id) }
-      ]
-    );
+    // Navegar para a tela de História primeiro
+    navigationHook.navigate('Historia', {
+      trilhaId: trilha.id
+    });
+  };
+
+  const handleReset = async () => {
+    try {
+      await resetProgress();
+      const status = await getTrilhasWithUnlockStatus();
+      setTrilhasComStatus(status);
+      Alert.alert('Sucesso', 'Progresso resetado!');
+    } catch (error) {
+      Alert.alert('Erro', 'Falha ao resetar progresso');
+    }
+  };
+
+  const handleSimulate = async () => {
+    try {
+      await simularTrilha1Completa();
+      const status = await getTrilhasWithUnlockStatus();
+      setTrilhasComStatus(status);
+      Alert.alert('Sucesso', 'Trilha 1 simulada como completa!');
+    } catch (error) {
+      Alert.alert('Erro', 'Falha ao simular Trilha 1');
+    }
   };
 
   const styles = createResponsiveStyles(screenWidth, screenHeight);
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded || loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0AD58B" />
+        <ActivityIndicator size="large" color="#58CC02" />
+        <Text style={styles.loadingText}>Carregando sua jornada...</Text>
       </View>
     );
   }
-  
-  const trilhasComConectores = [];
-  
-  trilhasInvertidas.forEach((trilha, index) => {
-    trilhasComConectores.push(
-      <TrilhaItem
-        key={trilha.id}
-        trilha={trilha}
-        onPress={() => handleTrilhaPress(trilha)}
-      />
-    );
-    
-    if (index < trilhasInvertidas.length - 1) {
-      const isCompleted = trilha.progresso === 100;
-      trilhasComConectores.push(
-        <CurvedConnector
-          key={`connector-${trilha.id}`}
-          isCompleted={isCompleted}
-          index={index}
-          screenWidth={screenWidth}
-        />
+
+  // Renderizar trilhas em layout responsivo
+  const renderTrilhasResponsive = () => {
+    return TRILHAS_MOCADAS.map((trilha, index) => {
+      const trilhaStatus = trilhasComStatus.find(t => t.id === trilha.id);
+      const trilhaComStatus = {
+        ...trilha,
+        bloqueada: !trilhaStatus?.desbloqueada,
+        progresso: trilhaStatus?.progresso || 0
+      };
+      
+      return (
+        <Animated.View
+          key={trilha.id}
+          style={[
+            styles.trilhaItemContainer,
+            !trilhaComStatus.bloqueada && trilhaComStatus.progresso === 0 && {
+              transform: [{ scale: pulseAnimations[index] }]
+            }
+          ]}
+        >
+          <TrilhaItem
+            trilha={trilhaComStatus}
+            onPress={() => handleTrilhaPress(trilhaComStatus)}
+          />
+        
+          {/* Conector simples para próxima trilha */}
+          {index < TRILHAS_MOCADAS.length - 1 && (
+            <View style={styles.simpleConnector}>
+              <View style={styles.connectorLine} />
+              <View style={styles.connectorDot} />
+            </View>
+          )}
+        </Animated.View>
       );
-    }
-  });
+    });
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.contentContainer}>
-        {/* Header da Home */}
-        <View style={styles.headerSection}>
-          <Text style={styles.welcomeTitle}>Bem-vindo ao Fingo!</Text>
-          <Text style={styles.welcomeSubtitle}>Continue sua jornada de aprendizado</Text>
-        </View>
-
-        {/* Seção de Progresso */}
+      {/* Header com Streak */}
+      <HeaderWithStreak 
+        userName={userData.name} 
+        streak={userData.streak} 
+        onReset={handleReset}
+        onSimulate={handleSimulate}
+      />
+      
+      <ScrollView 
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Seção de Progresso Melhorada */}
         <View style={styles.progressSection}>
           <View style={styles.progressCard}>
-            <Text style={styles.progressTitle}>Seu Progresso</Text>
-            <Text style={styles.progressText}>Trilhas concluídas: 3 de 5</Text>
+            <View style={styles.progressHeader}>
+              <Text style={styles.progressTitle}>Seu Progresso</Text>
+              <View style={styles.xpContainer}>
+                <MaterialIcons name="star" size={20} color="#FFD700" />
+                <Text style={styles.xpText}>{userData.xp} XP</Text>
+              </View>
+            </View>
+            <Text style={styles.progressText}>
+              {userData.trilhasConcluidas} de {userData.totalTrilhas} trilhas concluídas
+            </Text>
             <View style={styles.progressBar}>
-              <View style={styles.progressFill} />
+              <View 
+                style={[
+                  styles.progressFill, 
+                  { width: `${(userData.trilhasConcluidas / userData.totalTrilhas) * 100}%` }
+                ]} 
+              />
             </View>
           </View>
         </View>
 
-        {/* Lista de Trilhas - Layout Linear Conectado */}
+        {/* Trilhas em Layout Responsivo */}
         <View style={styles.trilhasSection}>
-          <Text style={styles.trilhasTitle}>Suas Trilhas</Text>
+          <Text style={styles.trilhasTitle}>Sua Jornada Financeira</Text>
           <View style={styles.trilhasContainer}>
-            {trilhasComConectores}
+            {renderTrilhasResponsive()}
           </View>
         </View>
       </ScrollView>
@@ -175,81 +388,83 @@ const createResponsiveStyles = (screenWidth, screenHeight) => {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: '#F7F9FC',
     },
     loadingContainer: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
+      backgroundColor: '#F7F9FC',
+    },
+    loadingText: {
+      marginTop: 16,
+      fontSize: 16,
+      color: '#58CC02',
+      fontFamily: 'Outfit-Regular',
     },
     contentContainer: {
-      paddingHorizontal: 20,
-      paddingBottom: 100,
-    },
-    headerSection: {
-      alignItems: 'center',
-      marginTop: 20,
-      marginBottom: 30,
-    },
-    welcomeTitle: {
-      fontSize: 28,
-      fontWeight: '600',
-      lineHeight: 35,
-      color: '#000000',
-      fontFamily: 'Outfit-Bold',
-      textAlign: 'center',
-      marginBottom: 8,
-    },
-    welcomeSubtitle: {
-      fontSize: 16,
-      fontWeight: '400',
-      lineHeight: 20,
-      color: '#666666',
-      fontFamily: 'Outfit-Regular',
-      textAlign: 'center',
+      paddingHorizontal: 16,
+      paddingBottom: 20,
     },
     progressSection: {
-      marginBottom: 30,
+      marginBottom: 20,
+      marginTop: 10,
     },
     progressCard: {
-      backgroundColor: '#F1F8FF',
-      borderColor: '#D9D9D9',
-      borderWidth: 1,
+      backgroundColor: '#FFFFFF',
       borderRadius: 12,
       paddingHorizontal: 20,
       paddingVertical: 16,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.05,
-      shadowRadius: 60,
-      elevation: 5,
+      shadowOpacity: 0.08,
+      shadowRadius: 12,
+      elevation: 8,
+      borderLeftWidth: 4,
+      borderLeftColor: '#58CC02',
+    },
+    progressHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
     },
     progressTitle: {
       fontSize: 18,
-      fontWeight: '600',
-      lineHeight: 22,
+      fontWeight: '700',
       fontFamily: 'Outfit-Bold',
-      color: '#000000',
-      marginBottom: 8,
+      color: '#1A1A1A',
+    },
+    xpContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#FFF3CD',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 20,
+    },
+    xpText: {
+      fontSize: 14,
+      fontWeight: '600',
+      fontFamily: 'Outfit-Bold',
+      color: '#856404',
+      marginLeft: 4,
     },
     progressText: {
       fontSize: 14,
-      fontWeight: '400',
-      lineHeight: 18,
       fontFamily: 'Outfit-Regular',
       color: '#666666',
-      marginBottom: 12,
+      marginBottom: 16,
     },
     progressBar: {
       height: 8,
-      backgroundColor: '#E5E5E5',
+      backgroundColor: '#E9ECEF',
       borderRadius: 4,
       overflow: 'hidden',
     },
     progressFill: {
       height: '100%',
-      width: '60%',
-      backgroundColor: '#0AD58B',
+      backgroundColor: '#58CC02',
       borderRadius: 4,
     },
     trilhasSection: {
@@ -257,17 +472,37 @@ const createResponsiveStyles = (screenWidth, screenHeight) => {
     },
     trilhasTitle: {
       fontSize: 20,
-      fontWeight: '600',
-      lineHeight: 25,
+      fontWeight: '700',
       fontFamily: 'Outfit-Bold',
-      color: '#000000',
-      marginBottom: 16,
+      color: '#1A1A1A',
+      marginBottom: 20,
+      textAlign: 'center',
     },
     trilhasContainer: {
-      flexDirection: 'column',
       alignItems: 'center',
-      paddingHorizontal: 20,
-      paddingVertical: 20,
+      paddingVertical: 10,
+    },
+    trilhaItemContainer: {
+      alignItems: 'center',
+      marginBottom: 15,
+      width: '100%',
+    },
+    simpleConnector: {
+      alignItems: 'center',
+      marginVertical: 5,
+    },
+    connectorLine: {
+      width: 2,
+      height: 15,
+      backgroundColor: '#58CC02',
+      borderRadius: 1,
+    },
+    connectorDot: {
+      width: 6,
+      height: 6,
+      backgroundColor: '#58CC02',
+      borderRadius: 3,
+      marginTop: 3,
     },
   });
 };
