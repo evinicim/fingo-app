@@ -18,6 +18,7 @@ import DesafiosScreen from '../screens/DesafiosScreen';
 import HistoriaScreen from '../screens/HistoriaScreen';
 import QuestaoScreen from '../screens/QuestaoScreen';
 import FeedbackScreen from '../screens/FeedbackScreen';
+import ProfileSetupScreen from '../screens/ProfileSetupScreen';
 import PerfilScreen from '../screens/PerfilScreen';
 
 const Stack = createNativeStackNavigator();
@@ -74,6 +75,7 @@ const AppNavigator = () => {
       <Stack.Screen name="Onboarding" component={OnboardingScreen} />
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
       <Stack.Screen name="PasswordRecovery" component={PasswordRecoveryScreen} />
       <Stack.Screen name="PasswordReset" component={PasswordResetScreen} />
       <Stack.Screen name="Main" component={MainTabNavigator} />
