@@ -1,7 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, Text } from 'react-native';
 
 // IMPORTAÇÕES CORRETAS DOS ÍCONES
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -20,11 +19,15 @@ import QuestaoScreen from '../screens/QuestaoScreen';
 import FeedbackScreen from '../screens/FeedbackScreen';
 import ProfileSetupScreen from '../screens/ProfileSetupScreen';
 import PerfilScreen from '../screens/PerfilScreen';
+import NotificationScreen from '../screens/NotificationScreen';
+import PrivacidadeScreen from '../screens/PrivacidadeScreen';
+import SobreScreen from '../screens/SobreScreen';
+import AjudaScreen from '../screens/AjudaScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Funcao para a navegação das abas inferiores
+// Função para a navegação das abas inferiores
 function MainTabNavigator() {
   return (
     <Tab.Navigator
@@ -50,7 +53,6 @@ function MainTabNavigator() {
         options={{
           tabBarLabel: 'Desafios',
           tabBarIcon: ({ color, size }) => (
-            // Ícone alterado para bullseye-arrow do MaterialCommunityIcons
             <MaterialCommunityIcons name="bullseye-arrow" size={size} color={color} />
           ),
         }}
@@ -83,6 +85,10 @@ const AppNavigator = () => {
       <Stack.Screen name="Desafios" component={DesafiosScreen} />
       <Stack.Screen name="Questao" component={QuestaoScreen} />
       <Stack.Screen name="Feedback" component={FeedbackScreen} />
+      <Stack.Screen name="Notifications" component={NotificationScreen} />
+      <Stack.Screen name="Privacidade" component={PrivacidadeScreen} />
+      <Stack.Screen name="Sobre" component={SobreScreen} />
+      <Stack.Screen name="Ajuda" component={AjudaScreen} />
     </Stack.Navigator>
   );
 };

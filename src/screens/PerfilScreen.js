@@ -5,14 +5,12 @@ import { useFonts } from 'expo-font';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AntDesign, Feather } from '@expo/vector-icons';
 
-// Importe o novo componente
 import OptionItem from '../components/OptionItem';
+import ProgressCard from '../components/ProgressCard';
 
 const PerfilScreen = () => {
   const navigation = useNavigation();
 
-  // Carregamento da fonte e dos ícones. Este é o passo crucial.
-  // Adapte os nomes das fontes para o seu projeto, se precisar.
   const [fontsLoaded] = useFonts({
     'Outfit-Regular': require('../assets/fonts/Outfit-Regular.ttf'),
     'Outfit-Bold': require('../assets/fonts/Outfit-Bold.ttf'),
@@ -20,14 +18,12 @@ const PerfilScreen = () => {
     ...AntDesign.font,
   });
 
-  // Dados de exemplo para o perfil
   const user = {
     name: "Fulano",
     avatar: "https://via.placeholder.com/100",
     lessonsCompleted: 8,
   };
 
-  // Se as fontes ainda não foram carregadas, exibe um carregador
   if (!fontsLoaded) {
     return (
       <View style={styles.loadingContainer}>
@@ -40,42 +36,42 @@ const PerfilScreen = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView>
         <View style={styles.contentContainer}>
-          {/* Seção de Perfil */}
           <View style={styles.profileSection}>
             <Text style={styles.profileTitle}>Perfil</Text>
             <Image source={{ uri: user.avatar }} style={styles.avatar} />
             <Text style={styles.userName}>{user.name}</Text>
           </View>
 
-          {/* Modal de Progresso */}
-          <View style={styles.progressModal}>
-            <View style={styles.progressContent}>
-              <Text style={styles.progressTitle}>Progresso</Text>
-              <Text style={styles.progressText}>Aulas concluídas</Text>
-              <Text style={styles.progressNumber}>{user.lessonsCompleted}</Text>
-            </View>
-          </View>
+          <ProgressCard 
+            title="Progresso"
+            text="Aulas concluídas"
+            number={user.lessonsCompleted} 
+          />
 
-          {/* Lista de Opções */}
           <View style={styles.optionsList}>
             <OptionItem
               title="Notificações"
-              onPress={() => Alert.alert("Navegar para Notificações")}
+              icon={<Feather name="bell" size={24} color="#000000" />}
+              onPress={() => navigation.navigate("Notifications")}
             />
             <OptionItem
               title="Privacidade"
-              onPress={() => Alert.alert("Navegar para Privacidade")}
+              icon={<Feather name="shield" size={24} color="#000000" />}
+              onPress={() => navigation.navigate("Privacidade")}
             />
             <OptionItem
               title="Sobre o App"
-              onPress={() => Alert.alert("Navegar para Sobre o App")}
+              icon={<Feather name="info" size={24} color="#000000" />}
+              onPress={() => navigation.navigate("Sobre")}
             />
             <OptionItem
               title="Ajuda"
-              onPress={() => Alert.alert("Navegar para Ajuda")}
+              icon={<Feather name="help-circle" size={24} color="#000000" />}
+              onPress={() => navigation.navigate("Ajuda")}
             />
             <OptionItem
               title="Sair"
+              icon={<Feather name="log-out" size={24} color="#FF0000" />}
               onPress={() => Alert.alert("Navegar para Sair")}
             />
           </View>
@@ -124,45 +120,6 @@ const styles = StyleSheet.create({
     lineHeight: 30,
     color: '#000000',
     fontFamily: 'Outfit-Bold',
-  },
-  progressModal: {
-    width: 249,
-    height: 106,
-    backgroundColor: '#F1F8FF',
-    borderColor: '#D9D9D9',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 60,
-    elevation: 5,
-  },
-  progressContent: {
-    gap: 8,
-  },
-  progressTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    lineHeight: 20,
-    fontFamily: 'Outfit-Bold',
-    color: '#000000',
-  },
-  progressText: {
-    fontSize: 14,
-    fontWeight: '400',
-    lineHeight: 18,
-    fontFamily: 'Outfit-Regular',
-    color: '#000000',
-  },
-  progressNumber: {
-    fontSize: 16,
-    fontWeight: '600',
-    lineHeight: 20,
-    fontFamily: 'Outfit-Bold',
-    color: '#000000',
   },
   optionsList: {
     width: '100%',
