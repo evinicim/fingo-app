@@ -9,6 +9,7 @@ import {
   Alert,
   Dimensions 
 } from 'react-native';
+// CORREÇÃO AQUI: Importação da biblioteca correta
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { AntDesign, MaterialIcons } from '@expo/vector-icons';

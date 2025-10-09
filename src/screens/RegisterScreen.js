@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   Image,
   ScrollView,
   KeyboardAvoidingView,
@@ -11,6 +10,7 @@ import {
   Dimensions,
   Alert,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import ImputText from "../components/ImputText";
 import SecondLink from "../components/SecondLink";
 import PrimaryNavButton from "../components/PrimaryNavButton";
