@@ -1,5 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, Image } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
+// Correção aqui:
+import { SafeAreaView } from 'react-native-safe-area-context';
 import ImputText from '../components/ImputText';
 import PrimaryNavButton from '../components/PrimaryNavButton';
 

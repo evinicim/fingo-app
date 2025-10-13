@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   Image,
   ScrollView,
   KeyboardAvoidingView,
@@ -11,35 +10,51 @@ import {
   Dimensions,
   Alert,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import ImputText from "../components/ImputText";
 import SecondLink from "../components/SecondLink";
 import PrimaryNavButton from "../components/PrimaryNavButton";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../services/firebaseConfig";
+import { criarUsuarioInicial } from "../services/userService";
 
 const RegisterScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [nome, setNome] = useState("");
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
+    if (!nome.trim()) {
+      Alert.alert("Erro", "Por favor, informe seu nome.");
+      return;
+    }
+
     if (password !== confirmPassword) {
       Alert.alert("Erro", "As senhas não coincidem.");
       return;
     }
 
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        // Signed in
-        const user = userCredential.user;
-        console.log("Usuário cadastrado:", user.email);
-        navigation.navigate("Main", { screen: "Home" });
-      })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        Alert.alert("Erro no cadastro", errorMessage);
-      });
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      console.log("Usuário cadastrado:", user.email);
+      
+      // Criar documento inicial do usuário no Firestore
+      const resultado = await criarUsuarioInicial(user.uid, email, nome.trim());
+      
+      if (resultado.success) {
+        navigation.navigate("ProfileSetup");
+      } else {
+        Alert.alert("Aviso", "Conta criada, mas houve um problema ao salvar os dados. Você pode continuar.");
+        navigation.navigate("ProfileSetup");
+      }
+      
+    } catch (error) {
+      console.error("Erro no cadastro:", error);
+      Alert.alert("Erro no cadastro", error.message);
+    }
   };
 
   return (
@@ -65,7 +80,11 @@ const RegisterScreen = ({ navigation }) => {
 
           {/* Container para os campos de formulário */}
           <View style={styles.formContainer}>
-            <ImputText placeholder="Nome completo" />
+            <ImputText 
+              placeholder="Nome completo" 
+              value={nome}
+              onChangeText={setNome}
+            />
             <ImputText
               placeholder="Email"
               keyboardType="email-address"
