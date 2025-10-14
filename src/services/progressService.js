@@ -1,5 +1,7 @@
 // Serviço para gerenciar o progresso do usuário
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { auth, db } from './firebaseConfig';
+import { collection, doc, getDoc, setDoc, updateDoc, getDocs, query, where } from 'firebase/firestore';
 
 const PROGRESS_KEY = 'user_progress';
 
@@ -33,6 +35,12 @@ export const saveUserProgress = async (progress) => {
       ultimaAtualizacao: new Date().toISOString()
     };
     await AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(progressToSave));
+    // Persistir no Firestore se logado
+    const uid = auth.currentUser?.uid;
+    if (uid) {
+      const ref = doc(db, 'users', uid);
+      await setDoc(ref, { progressoCache: progressToSave }, { merge: true });
+    }
     return true;
   } catch (error) {
     console.error('Erro ao salvar progresso:', error);
@@ -121,24 +129,10 @@ export const updateTrilhaProgress = async (trilhaId, progresso) => {
 export const calculateTrilhaProgress = async (trilhaId) => {
   try {
     const progress = await loadUserProgress();
-    
-    // Buscar dados da trilha
-    const { TRILHAS_MOCADAS } = await import('../data/mockdata');
-    const trilha = TRILHAS_MOCADAS.find(t => t.id === trilhaId);
-    
-    if (!trilha || !trilha.modulos) {
-      return 0;
-    }
-    
-    // Calcular total de itens (1 história + todas as questões)
-    const todasQuestoes = [];
-    Object.values(trilha.modulos).forEach(modulo => {
-      if (modulo.questoes) {
-        todasQuestoes.push(...modulo.questoes);
-      }
-    });
-    
-    const totalItens = 1 + todasQuestoes.length; // 1 história + questões
+    // Buscar quantidade real de questões da trilha no Firestore
+    const qsSnap = await getDocs(query(collection(db, 'questao'), where('trilhaId', '==', trilhaId)));
+    const totalQuestoes = qsSnap.size;
+    const totalItens = 1 + totalQuestoes; // 1 história + questões
     let itensCompletados = 0;
     
     // Verificar se história foi concluída (50% do progresso)
@@ -147,9 +141,9 @@ export const calculateTrilhaProgress = async (trilhaId) => {
     }
     
     // Verificar questões completadas (50% do progresso)
-    const questoesCompletadas = todasQuestoes.filter(questao => 
-      progress.questoesCompletadas.some(q => q.id === questao.id)
-    ).length;
+    const questoesIds = progress.questoesCompletadas.map(q => q.id);
+    // considera apenas ids que pertencem à trilha (prefixo ou verificar pela coleção local)
+    const questoesCompletadas = questoesIds.filter(id => id.includes(`trilha_`) && id.includes(trilhaId)).length;
     
     itensCompletados += questoesCompletadas;
     
@@ -158,6 +152,17 @@ export const calculateTrilhaProgress = async (trilhaId) => {
     
     // Salvar progresso calculado
     await updateTrilhaProgress(trilhaId, porcentagem);
+    // Persistir no Firestore por trilha
+    const uid = auth.currentUser?.uid;
+    if (uid) {
+      const progRef = doc(db, 'users', uid, 'progresso', trilhaId);
+      await setDoc(progRef, {
+        progresso: porcentagem,
+        historiasConcluidas: progress.historiasConcluidas.includes(trilhaId),
+        questoesCompletadas: progress.questoesCompletadas.filter(q => q.id.includes(trilhaId)).map(q => q.id),
+        dataAtualizacao: new Date().toISOString(),
+      }, { merge: true });
+    }
     
     return porcentagem;
   } catch (error) {
@@ -197,20 +202,9 @@ export const isTrilhaUnlocked = async (trilhaId) => {
       }
       
       // Verificar se todas as questões da trilha anterior foram respondidas
-      const { TRILHAS_MOCADAS } = await import('../data/mockdata');
-      const trilhaAnteriorData = TRILHAS_MOCADAS.find(t => t.id === trilhaAnterior);
-      
-      if (!trilhaAnteriorData || !trilhaAnteriorData.modulos) {
-        return false;
-      }
-      
-      // Buscar todas as questões da trilha anterior
-      const todasQuestoesAnterior = [];
-      Object.values(trilhaAnteriorData.modulos).forEach(modulo => {
-        if (modulo.questoes) {
-          todasQuestoesAnterior.push(...modulo.questoes);
-        }
-      });
+      // Buscar todas as questões da trilha anterior (Firestore)
+      const qsSnap = await getDocs(query(collection(db, 'questao'), where('trilhaId', '==', trilhaAnterior)));
+      const todasQuestoesAnterior = qsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
       
       console.log(`\n🔍 Verificando desbloqueio da ${trilhaId}:`);
       console.log(`📚 Trilha anterior: ${trilhaAnterior}`);
