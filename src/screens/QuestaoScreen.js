@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { AntDesign, MaterialIcons } from '@expo/vector-icons';
-import { getQuestaoById } from '../data/mockdata';
+import { getQuestoesByModulo } from '../services/contentService';
 import { markQuestaoAsCompleted, calculateTrilhaProgress } from '../services/progressService';
 
 // Funções de responsividade simples
@@ -140,11 +140,27 @@ const QuestaoScreen = () => {
   });
 
   useEffect(() => {
-    if (questaoId) {
-      const questaoData = getQuestaoById(questaoId);
-      setQuestao(questaoData);
-    }
-  }, [questaoId]);
+    const load = async () => {
+      if (moduloId) {
+        const qs = await getQuestoesByModulo(moduloId);
+        const q = questaoId ? qs.find(x => x.id === questaoId) : qs[0];
+        if (q) {
+          // normalizar campos para o componente atual
+          setQuestao({
+            id: q.id,
+            trilhaTitulo: '',
+            moduloTitulo: '',
+            dificuldade: q.dificuldade || 'facil',
+            pergunta: q.enunciado,
+            opcoes: q.opcoes?.map(o => o.texto) || [],
+            respostaCorreta: ['A','B','C','D'].indexOf(q.respostaCorreta),
+            explicacao: q.explicacao || ''
+          });
+        }
+      }
+    };
+    load();
+  }, [questaoId, moduloId]);
 
   useEffect(() => {
     if (mostrarResultado) {

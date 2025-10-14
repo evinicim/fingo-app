@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Dim
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { AntDesign, MaterialIcons } from '@expo/vector-icons';
-import { TRILHAS_MOCADAS, getQuestoesByModulo } from '../data/mockdata';
+import { getTrilhaById } from '../services/contentService';
 import { markHistoriaAsCompleted, isHistoriaCompleted, calculateTrilhaProgress, getTrilhaProgress } from '../services/progressService';
 
 // Funções de responsividade simples
@@ -216,7 +216,7 @@ const HistoriaScreen = () => {
   useEffect(() => {
     const loadHistoriaState = async () => {
       if (trilhaId) {
-        const trilhaData = TRILHAS_MOCADAS.find(t => t.id === trilhaId);
+        const trilhaData = await getTrilhaById(trilhaId);
         setTrilha(trilhaData);
         
         // Verificar se a história foi concluída
@@ -309,13 +309,7 @@ const HistoriaScreen = () => {
   };
 
   const handleIrParaDesafios = () => {
-    if (trilha && trilha.modulos) {
-      const primeiroModulo = Object.keys(trilha.modulos)[0];
-      navigation.navigate('Desafios', {
-        trilhaId: trilha.id,
-        moduloId: primeiroModulo
-      });
-    }
+    navigation.navigate('Desafios', { trilhaId: trilha.id });
   };
 
   const handleVoltar = () => {
@@ -490,7 +484,7 @@ const styles = StyleSheet.create({
     );
   }
 
-  const questoesDisponiveis = trilha.modulos ? Object.values(trilha.modulos).reduce((total, modulo) => total + modulo.questoes.length, 0) : 0;
+  const questoesDisponiveis = trilha?.totalQuestoes || 0;
 
   return (
     <SafeAreaView style={styles.container}>

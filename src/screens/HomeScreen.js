@@ -7,8 +7,8 @@ import Svg, { Path, Circle, Defs, LinearGradient, Stop } from 'react-native-svg'
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { AntDesign, Feather, MaterialIcons } from '@expo/vector-icons';
-import { TRILHAS_MOCADAS } from '../data/mockdata';
 import { getTrilhasWithUnlockStatus, debugTrilhasStatus, resetProgress, simularTrilha1Completa } from '../services/progressService';
+import { getTrilhas } from '../services/contentService';
 import TrilhaItem from '../components/TrilhaItem';
 // Funções de responsividade simples
 const wp = (percentage) => {
@@ -158,9 +158,8 @@ const HomeScreen = ({ navigation }) => {
   const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
   
   // Estados para animações
-  const [pulseAnimations] = useState(
-    TRILHAS_MOCADAS.map(() => new Animated.Value(1))
-  );
+  const [pulseAnimations] = useState([]);
+  const [trilhas, setTrilhas] = useState([]);
   
   // Estados para trilhas com status de desbloqueio
   const [trilhasComStatus, setTrilhasComStatus] = useState([]);
@@ -186,12 +185,17 @@ const HomeScreen = ({ navigation }) => {
   useEffect(() => {
     const loadTrilhasStatus = async () => {
       try {
+        const trilhasData = await getTrilhas();
+        setTrilhas(trilhasData);
+        // inicializa animações conforme número de trilhas
+        if (trilhasData?.length) {
+          const anims = trilhasData.map(() => new Animated.Value(1));
+          pulseAnimations.splice(0, pulseAnimations.length, ...anims);
+        }
+
         const status = await getTrilhasWithUnlockStatus();
         setTrilhasComStatus(status);
-        
-        // Debug para verificar status
         await debugTrilhasStatus();
-        
         setLoading(false);
       } catch (error) {
         console.error('Erro ao carregar status das trilhas:', error);
@@ -221,7 +225,7 @@ const HomeScreen = ({ navigation }) => {
   // Animação de pulso para trilhas disponíveis
   useEffect(() => {
     const pulseAnimation = () => {
-      TRILHAS_MOCADAS.forEach((trilha, index) => {
+      trilhas.forEach((trilha, index) => {
         if (!trilha.bloqueada && trilha.progresso === 0) {
           Animated.loop(
             Animated.sequence([
@@ -244,7 +248,7 @@ const HomeScreen = ({ navigation }) => {
     if (fontsLoaded) {
       pulseAnimation();
     }
-  }, [fontsLoaded]);
+  }, [fontsLoaded, trilhas]);
 
   const handleTrilhaPress = (trilha) => {
     // Verificar se a trilha está desbloqueada
@@ -300,7 +304,7 @@ const HomeScreen = ({ navigation }) => {
 
   // Renderizar trilhas em layout responsivo
   const renderTrilhasResponsive = () => {
-    return TRILHAS_MOCADAS.map((trilha, index) => {
+    return trilhas.map((trilha, index) => {
       const trilhaStatus = trilhasComStatus.find(t => t.id === trilha.id);
       const trilhaComStatus = {
         ...trilha,
@@ -324,7 +328,7 @@ const HomeScreen = ({ navigation }) => {
           />
         
           {/* Conector simples para próxima trilha */}
-          {index < TRILHAS_MOCADAS.length - 1 && (
+          {index < trilhas.length - 1 && (
             <View style={styles.simpleConnector}>
               <View style={styles.connectorLine} />
               <View style={styles.connectorDot} />
