@@ -6,10 +6,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { AntDesign, Feather, MaterialIcons } from '@expo/vector-icons';
-import { getTrilhasWithUnlockStatus, debugTrilhasStatus, resetProgress, simularTrilha1Completa } from '../services/progressService';
+import { Feather, MaterialIcons } from '@expo/vector-icons';
+import { getTrilhasWithUnlockStatus, debugTrilhasStatus, resetProgress, simularTrilha1Completa, getUserStats } from '../services/progressService';
 import { getTrilhas } from '../services/contentService';
 import { getDesafiosAtivos, getDesafiosDoUsuario } from '../services/desafiosService';
+import { buscarDadosPerfil } from '../services/userService';
+import { auth } from '../services/firebaseConfig';
 import TrilhaItem from '../components/TrilhaItem';
 // Funções de responsividade simples
 const wp = (percentage) => {
@@ -138,7 +140,7 @@ const HeaderWithStreak = ({ userName = "Jovem Financista", streak = 7, onReset, 
       <View style={styles.headerContent}>
         <Text style={styles.welcomeText}>Olá, {userName}! 👋</Text>
         <View style={styles.streakContainer}>
-          <AntDesign name="fire" size={16} color="#FFD700" />
+          <MaterialIcons name="whatshot" size={16} color="#FFD700" />
           <Text style={styles.streakText}>{streak} dias</Text>
         </View>
       </View>
@@ -147,7 +149,7 @@ const HeaderWithStreak = ({ userName = "Jovem Financista", streak = 7, onReset, 
           <Text style={styles.testButtonText}>Reset</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.testButton} onPress={onSimulate}>
-          <Text style={styles.testButtonText}>Simular T1</Text>
+          <Text style={styles.testButtonText}>Simular próxima</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -167,27 +169,28 @@ const HomeScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [desafios, setDesafios] = useState([]);
   const [desafiosUsuario, setDesafiosUsuario] = useState([]);
+  const [userData, setUserData] = useState({
+    name: "Jovem Financista",
+    primeiroNome: "Jovem",
+    streak: 7,
+    totalTrilhas: 0,
+    trilhasConcluidas: 0,
+    xp: 0,
+  });
 
   const [fontsLoaded] = useFonts({
     'Outfit-Regular': require('../assets/fonts/Outfit-Regular.ttf'),
     'Outfit-Bold': require('../assets/fonts/Outfit-Bold.ttf'),
-    ...Feather.font,
-    ...AntDesign.font,
   });
 
-  // Dados do usuário (simulados)
-  const userData = {
-    name: "Jovem Financista",
-    streak: 7,
-    totalTrilhas: trilhas.length,
-    trilhasConcluidas: trilhasComStatus.filter(t => t.progresso === 100).length,
-    xp: 1250,
-  };
-
-  // Carregar status de desbloqueio das trilhas
+  // Carregar status de desbloqueio das trilhas e dados do usuário
   useEffect(() => {
     const loadTrilhasStatus = async () => {
       try {
+        // Marcar início do carregamento
+        const startTime = Date.now();
+        console.log('⏱️ Iniciando carregamento da Home...');
+        
         const trilhasData = await getTrilhas();
         setTrilhas(trilhasData);
         // inicializa animações conforme número de trilhas
@@ -197,14 +200,39 @@ const HomeScreen = ({ navigation }) => {
         }
 
         const status = await getTrilhasWithUnlockStatus();
+        // Reordena por ordem para evitar "fora de ordem" na UI
+        status.sort((a, b) => (trilhasData.find(t => t.id === a.id)?.ordem ?? 999) - (trilhasData.find(t => t.id === b.id)?.ordem ?? 999));
         setTrilhasComStatus(status);
         await debugTrilhasStatus();
+        
         // carrega desafios (missões)
         const ativos = await getDesafiosAtivos();
         const meus = await getDesafiosDoUsuario();
         setDesafios(ativos);
         setDesafiosUsuario(meus);
+
+        // Carregar dados do usuário do Firestore
+        const uid = auth.currentUser?.uid;
+        if (uid) {
+          const stats = await getUserStats();
+          const perfilResult = await buscarDadosPerfil(uid);
+          if (perfilResult.success) {
+            setUserData({
+              name: perfilResult.data.nome || 'Jovem Financista',
+              primeiroNome: perfilResult.data.primeiroNome || perfilResult.data.nome?.split(' ')[0] || 'Jovem',
+              streak: 7, // TODO: implementar streak real
+              totalTrilhas: stats.totalTrilhas,
+              trilhasConcluidas: stats.trilhasConcluidas,
+              xp: stats.xp,
+            });
+          }
+        }
+
         setLoading(false);
+        
+        // Medir tempo de carregamento
+        const loadTime = Date.now() - startTime;
+        console.log(`✅ Home carregada em ${loadTime}ms`);
       } catch (error) {
         console.error('Erro ao carregar status das trilhas:', error);
         setLoading(false);
@@ -221,6 +249,23 @@ const HomeScreen = ({ navigation }) => {
         try {
           const status = await getTrilhasWithUnlockStatus();
           setTrilhasComStatus(status);
+          
+          // Recarregar XP e stats do usuário
+          const uid = auth.currentUser?.uid;
+          if (uid) {
+            const stats = await getUserStats();
+            const perfilResult = await buscarDadosPerfil(uid);
+            if (perfilResult.success) {
+              setUserData({
+                name: perfilResult.data.nome || 'Jovem Financista',
+                primeiroNome: perfilResult.data.primeiroNome || perfilResult.data.nome?.split(' ')[0] || 'Jovem',
+                streak: 7,
+                totalTrilhas: stats.totalTrilhas,
+                trilhasConcluidas: stats.trilhasConcluidas,
+                xp: stats.xp,
+              });
+            }
+          }
         } catch (error) {
           console.error('Erro ao recarregar status das trilhas:', error);
         }
@@ -291,12 +336,39 @@ const HomeScreen = ({ navigation }) => {
 
   const handleSimulate = async () => {
     try {
-      await simularTrilha1Completa();
+      // Simulação progressiva: encontra a primeira trilha com progresso < 100 e marca como concluída (história + questões)
+      const ordered = [...trilhas].sort((a,b) => (a?.ordem ?? 999) - (b?.ordem ?? 999));
       const status = await getTrilhasWithUnlockStatus();
-      setTrilhasComStatus(status);
-      Alert.alert('Sucesso', 'Trilha 1 simulada como completa!');
+      const aberto = ordered.find(t => (status.find(s => s.id === t.id)?.progresso || 0) < 100);
+      if (!aberto) {
+        Alert.alert('Info', 'Todas as trilhas já estão completas.');
+        return;
+      }
+      // Reutiliza a função existente para T1 se for trilha_01, caso contrário completa via progresso local
+      if (aberto.id === 'trilha_01') {
+        await simularTrilha1Completa();
+      } else {
+        // Marca como completa no progresso local
+        const { loadUserProgress, saveUserProgress, calculateTrilhaProgress } = await import('../services/progressService');
+        const prog = await loadUserProgress();
+        if (!prog.historiasConcluidas.includes(aberto.id)) prog.historiasConcluidas.push(aberto.id);
+        // Marca questões da trilha como completadas pelo padrão de ids (questao_trilha_X_...)
+        const { getDocs, collection, query, where } = await import('firebase/firestore');
+        const { db } = await import('../services/firebaseConfig');
+        const qs = await getDocs(query(collection(db, 'questao'), where('trilhaId', '==', aberto.id)));
+        qs.docs.forEach(d => {
+          if (!prog.questoesCompletadas.some(q => q.id === d.id)) {
+            prog.questoesCompletadas.push({ id: d.id, pontuacao: 10, dataConclusao: new Date().toISOString() });
+          }
+        });
+        await saveUserProgress(prog);
+        await calculateTrilhaProgress(aberto.id);
+      }
+      const novo = await getTrilhasWithUnlockStatus();
+      setTrilhasComStatus(novo);
+      Alert.alert('Sucesso', `Simulada como completa: ${aberto.titulo}`);
     } catch (error) {
-      Alert.alert('Erro', 'Falha ao simular Trilha 1');
+      Alert.alert('Erro', 'Falha ao simular trilha');
     }
   };
 
@@ -353,7 +425,7 @@ const HomeScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       {/* Header com Streak */}
       <HeaderWithStreak 
-        userName={userData.name} 
+        userName={userData.primeiroNome} 
         streak={userData.streak} 
         onReset={handleReset}
         onSimulate={handleSimulate}

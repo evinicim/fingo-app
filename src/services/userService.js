@@ -6,9 +6,23 @@ export const salvarDadosPerfil = async (userId, dadosPerfil) => {
   try {
     const userRef = doc(db, 'users', userId);
     
+    // Busca nome atual se não vier no dadosPerfil
+    let nomeCompleto = dadosPerfil.nome;
+    if (!nomeCompleto) {
+      const userSnap = await getDoc(userRef);
+      nomeCompleto = userSnap.data()?.nome || '';
+    }
+    
+    // Extrai primeiroNome e sobrenome do nome completo
+    const primeiroNome = nomeCompleto?.split(' ')[0] || '';
+    const sobrenome = nomeCompleto?.split(' ').slice(1).join(' ') || '';
+    
     // Dados básicos do perfil
     const perfilData = {
       ...dadosPerfil,
+      ...(nomeCompleto && { nome: nomeCompleto }),
+      primeiroNome,
+      sobrenome,
       dataAtualizacao: new Date().toISOString(),
       perfilCompleto: true,
     };
@@ -99,6 +113,8 @@ export const criarUsuarioInicial = async (userId, email, nome) => {
     const dadosIniciais = {
       email: email,
       nome: nome,
+      primeiroNome: nome?.split(' ')[0] || '',
+      sobrenome: nome?.split(' ').slice(1).join(' ') || '',
       dataCriacao: new Date().toISOString(),
       perfilCompleto: false,
       avatar: null,

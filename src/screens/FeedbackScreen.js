@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Dimensions, Animated } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { AntDesign, MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { enviarFeedback } from '../services/feedbackService';
 
 // Funções de responsividade simples
@@ -335,7 +335,7 @@ const FeedbackScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleVoltar}>
-          <AntDesign name="arrowleft" size={24} color="#FFFFFF" />
+          <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Feedback</Text>
@@ -355,8 +355,8 @@ const FeedbackScreen = () => {
         >
           {/* Ícone de Status */}
           <View style={styles.iconContainer}>
-            <AntDesign
-              name={respostaCorreta ? "checkcircle" : "closecircle"}
+            <MaterialIcons
+              name={respostaCorreta ? 'check-circle' : 'cancel'}
               size={40}
               color={respostaCorreta ? '#58CC02' : '#FF6B6B'}
             />

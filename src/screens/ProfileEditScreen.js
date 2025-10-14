@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { AntDesign, MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 import { buscarDadosPerfil, atualizarDadosPerfil } from '../services/userService';
 import { auth } from '../services/firebaseConfig';
@@ -173,7 +173,7 @@ const ProfileEditScreen = () => {
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <AntDesign name="arrowleft" size={24} color="#333" />
+            <MaterialIcons name="arrow-back" size={24} color="#333" />
           </TouchableOpacity>
           <Text style={styles.title}>Editar Perfil</Text>
           <View style={styles.placeholder} />
@@ -278,7 +278,7 @@ const ProfileEditScreen = () => {
           ) : (
             <>
               <Text style={styles.saveButtonText}>Salvar Alterações</Text>
-              <AntDesign name="check" size={20} color="#FFF" />
+              <MaterialIcons name="check" size={20} color="#FFF" />
             </>
           )}
         </TouchableOpacity>

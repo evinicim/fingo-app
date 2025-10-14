@@ -12,7 +12,7 @@ import {
 // CORREÇÃO AQUI: Importação da biblioteca correta
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { AntDesign, MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 import { salvarDadosPerfil } from '../services/userService';
 import { auth } from '../services/firebaseConfig';
@@ -124,7 +124,7 @@ const ProfileSetupScreen = () => {
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <AntDesign name="arrowleft" size={24} color="#333" />
+            <MaterialIcons name="arrow-back" size={24} color="#333" />
           </TouchableOpacity>
           <Text style={styles.title}>Configure seu Perfil</Text>
           <View style={styles.placeholder} />
@@ -232,7 +232,7 @@ const ProfileSetupScreen = () => {
           onPress={handleContinuar}
         >
           <Text style={styles.continueButtonText}>Continuar</Text>
-          <AntDesign name="arrowright" size={20} color="#FFF" />
+          <MaterialIcons name="arrow-forward" size={20} color="#FFF" />
         </TouchableOpacity>
 
       </ScrollView>

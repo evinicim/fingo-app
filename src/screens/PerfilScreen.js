@@ -3,14 +3,14 @@ import { View, Text, StyleSheet, Image, ActivityIndicator, Alert, ScrollView, To
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AntDesign, Feather } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import { signOut } from 'firebase/auth';
 
 import OptionItem from '../components/OptionItem';
 import ProgressCard from '../components/ProgressCard';
 import { buscarDadosPerfil } from '../services/userService';
 import { auth } from '../services/firebaseConfig';
-import { getTrilhasWithUnlockStatus } from '../services/progressService';
+import { getTrilhasWithUnlockStatus, getUserStats } from '../services/progressService';
 
 const PerfilScreen = () => {
   const navigation = useNavigation();
@@ -18,6 +18,7 @@ const PerfilScreen = () => {
   const [loading, setLoading] = useState(true);
   const [progressData, setProgressData] = useState({
     trilhasConcluidas: 0,
+    totalTrilhas: 0,
     questoesCompletadas: 0,
     progressoTotal: 0,
   });
@@ -26,7 +27,6 @@ const PerfilScreen = () => {
     'Outfit-Regular': require('../assets/fonts/Outfit-Regular.ttf'),
     'Outfit-Bold': require('../assets/fonts/Outfit-Bold.ttf'),
     ...Feather.font,
-    ...AntDesign.font,
   });
 
   // Função para carregar dados do usuário
@@ -47,18 +47,21 @@ const PerfilScreen = () => {
       if (resultado.success) {
         setUserData(resultado.data);
         
-        // Calcular progresso das trilhas
-        const trilhasComStatus = await getTrilhasWithUnlockStatus(userId);
-        const trilhasConcluidas = trilhasComStatus.filter(t => t.progresso === 100).length;
-        const progressoTotal = Math.round(
-          trilhasComStatus.reduce((acc, t) => acc + t.progresso, 0) / trilhasComStatus.length
-        );
-        
+        // Estatísticas dinâmicas
+        const stats = await getUserStats();
+        const trilhasComStatus = await getTrilhasWithUnlockStatus();
+        const progressoTotal = trilhasComStatus.length
+          ? Math.round(trilhasComStatus.reduce((acc, t) => acc + t.progresso, 0) / trilhasComStatus.length)
+          : 0;
+
         setProgressData({
-          trilhasConcluidas,
-          questoesCompletadas: resultado.data.questoesCompletadas?.length || 0,
+          trilhasConcluidas: stats.trilhasConcluidas,
+          totalTrilhas: stats.totalTrilhas,
+          questoesCompletadas: stats.questoesRespondidas,
           progressoTotal,
         });
+        // Atualiza campos exibidos
+        setUserData((prev) => ({ ...(prev || {}), xp: stats.xp, nivel: stats.level }));
       } else {
         Alert.alert('Erro', 'Não foi possível carregar os dados do perfil');
       }
@@ -168,7 +171,7 @@ const PerfilScreen = () => {
           <View style={styles.progressSection}>
             <ProgressCard 
               title="Trilhas Concluídas"
-              text={`${progressData.trilhasConcluidas} de 5 trilhas`}
+              text={`${progressData.trilhasConcluidas} de ${Math.max(1, progressData.totalTrilhas)} trilhas`}
               number={`${progressData.progressoTotal}%`}
             />
             

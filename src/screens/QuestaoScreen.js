@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Dimensions
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { AntDesign, MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { getQuestoesByModulo } from '../services/contentService';
 import { markQuestaoAsCompleted, calculateTrilhaProgress } from '../services/progressService';
 
@@ -111,8 +111,8 @@ const OpcaoResposta = ({ opcao, index, isSelected, isCorrect, isWrong, onPress, 
         <Text style={styles.opcaoText}>{opcao}</Text>
         {disabled && (
           <View style={styles.statusIcon}>
-            <AntDesign
-              name={isCorrect ? "checkcircle" : "closecircle"}
+            <MaterialIcons
+              name={isCorrect ? "check-circle" : "cancel"}
               size={20}
               color={isCorrect ? "#58CC02" : "#FF6B6B"}
             />
@@ -189,7 +189,7 @@ const QuestaoScreen = () => {
     // Salvar progresso da questão e recalcular progresso da trilha
     try {
       const pontuacao = isCorrect ? 10 : 0;
-      await markQuestaoAsCompleted(questao.id, pontuacao);
+      await markQuestaoAsCompleted(questao.id, trilhaId, respostaSelecionada, isCorrect, pontuacao);
       
       // Recalcular progresso da trilha
       await calculateTrilhaProgress(trilhaId);
@@ -382,7 +382,7 @@ const QuestaoScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleVoltar}>
-          <AntDesign name="arrowleft" size={24} color="#FFFFFF" />
+          <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Questão</Text>

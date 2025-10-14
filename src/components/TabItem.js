@@ -1,8 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 // Importamos os conjuntos de ícones necessários
-import AntDesign from 'react-native-vector-icons/AntDesign';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 const TabItem = ({ titulo, iconName, onPress }) => {
   let IconComponent;
@@ -10,7 +9,7 @@ const TabItem = ({ titulo, iconName, onPress }) => {
   if (iconName === 'trophy') {
     IconComponent = MaterialCommunityIcons;
   } else {
-    IconComponent = AntDesign;
+    IconComponent = MaterialIcons;
   }
 
   return (

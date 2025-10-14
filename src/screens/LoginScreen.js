@@ -4,9 +4,10 @@ import ImputText from "../components/ImputText";
 import PrimaryNavButton from "../components/PrimaryNavButton";
 import SecondLink from "../components/SecondLink";
 import SocialButton from "../components/SocialButton";
-import AntDesign from "react-native-vector-icons/AntDesign";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../services/firebaseConfig";
+import { preloadEssentialData } from "../services/cacheService";
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -25,10 +26,16 @@ const LoginScreen = ({ navigation }) => {
 
   const handleLogin = () => {
     signInWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
+      .then(async (userCredential) => {
         // Signed in
         const user = userCredential.user;
         console.log("Usuário logado:", user.email);
+        
+        // Pré-carregar dados essenciais em background (não bloqueia navegação)
+        preloadEssentialData(user.uid).catch(err => {
+          console.warn('Erro ao pré-carregar dados:', err);
+        });
+        
         navigation.navigate("Main", { screen: "Home" });
       })
       .catch((error) => {
@@ -94,7 +101,7 @@ const LoginScreen = ({ navigation }) => {
             />
           </SocialButton>
           <SocialButton onPress={() => {}}>
-            <AntDesign name="apple" size={30} color="#000" />
+            <MaterialCommunityIcons name="apple" size={30} color="#000" />
           </SocialButton>
         </View>
       </View>

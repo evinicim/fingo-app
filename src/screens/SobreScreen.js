@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Image, Touchable
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
 import { useNavigation } from '@react-navigation/native';
-import { AntDesign } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const SobreScreen = () => {
     const navigation = useNavigation();
@@ -29,7 +29,7 @@ const SobreScreen = () => {
                         style={styles.backButton}
                         onPress={() => navigation.goBack()}
                     >
-                        <AntDesign name="arrowleft" size={24} color="#333" />
+                        <MaterialIcons name="arrow-back" size={24} color="#333" />
                     </TouchableOpacity>
                     <Text style={styles.title}>Sobre o App</Text>
                     <View style={styles.placeholder} />

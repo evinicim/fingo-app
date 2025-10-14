@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, TouchableOpacity, TextInput, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
-import { Feather, AntDesign, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Feather, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { deleteUser } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -21,7 +21,7 @@ const PrivacidadeScreen = () => {
         'Outfit-Regular': require('../assets/fonts/Outfit-Regular.ttf'),
         'Outfit-Bold': require('../assets/fonts/Outfit-Bold.ttf'),
         ...Feather.font,
-        ...AntDesign.font,
+        ...MaterialIcons.font,
         ...MaterialCommunityIcons.font,
     });
 
@@ -129,7 +129,7 @@ const PrivacidadeScreen = () => {
                         style={styles.backButton}
                         onPress={() => navigation.goBack()}
                     >
-                        <AntDesign name="arrowleft" size={24} color="#333" />
+                        <MaterialIcons name="arrow-back" size={24} color="#333" />
                     </TouchableOpacity>
                     <Text style={styles.title}>Privacidade</Text>
                     <View style={styles.placeholder} />
@@ -171,7 +171,7 @@ const PrivacidadeScreen = () => {
                         <View style={styles.modalHeader}>
                             <Text style={styles.modalTitle}>Confirmar Exclusão</Text>
                             <TouchableOpacity onPress={() => setModalVisible(false)}>
-                                <AntDesign name="close" size={24} color="#333" />
+                                <MaterialIcons name="close" size={24} color="#333" />
                             </TouchableOpacity>
                         </View>
 
