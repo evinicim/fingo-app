@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Ale
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { AntDesign, MaterialIcons } from '@expo/vector-icons';
-import { TRILHAS_MOCADAS, getQuestoesByModulo } from '../data/mockdata';
+import { getModulosByTrilha, getQuestoesByModulo } from '../services/contentService';
 import { isHistoriaCompleted, isQuestaoCompleted } from '../services/progressService';
 
 // Funções de responsividade simples
@@ -139,7 +139,7 @@ const QuestaoItem = ({ questao, onPress, isCompleted = false }) => {
 const DesafiosScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { trilhaId, moduloId } = route.params || { trilhaId: 'trilha_01', moduloId: 'modulo_1_1' };
+  const { trilhaId, moduloId } = route.params || { trilhaId: 'trilha_01', moduloId: null };
   
   const [questoes, setQuestoes] = useState([]);
   const [moduloInfo, setModuloInfo] = useState(null);
@@ -153,18 +153,24 @@ const DesafiosScreen = () => {
 
   useEffect(() => {
     const loadDesafiosState = async () => {
-      if (trilhaId && moduloId) {
-        const questoesData = getQuestoesByModulo(trilhaId, moduloId);
-        setQuestoes(questoesData);
-        
-        // Buscar informações do módulo
-        const trilha = TRILHAS_MOCADAS.find(t => t.id === trilhaId);
-        if (trilha && trilha.modulos && trilha.modulos[moduloId]) {
+      if (trilhaId) {
+        // Se não vier moduloId, pega o primeiro módulo da trilha
+        const modulos = await getModulosByTrilha(trilhaId);
+        const moduloSelecionado = moduloId ? modulos.find(m => m.id === moduloId) : modulos[0];
+        if (moduloSelecionado) {
           setModuloInfo({
-            titulo: trilha.modulos[moduloId].titulo,
-            trilhaTitulo: trilha.titulo,
-            descricao: trilha.descricao
+            titulo: moduloSelecionado.titulo,
+            trilhaTitulo: '',
+            descricao: moduloSelecionado.descricao
           });
+          const questoesData = await getQuestoesByModulo(moduloSelecionado.id);
+          // normalizar para o componente
+          setQuestoes(questoesData.map(q => ({
+            id: q.id,
+            dificuldade: q.dificuldade || 'facil',
+            pergunta: q.enunciado,
+            opcoes: q.opcoes?.map(o => o.texto) || []
+          })));
         }
         
         // Verificar se a história foi concluída
@@ -173,7 +179,7 @@ const DesafiosScreen = () => {
         
         // Verificar quais questões foram completadas
         const questoesCompletadasSet = new Set();
-        for (const questao of questoesData) {
+        for (const questao of questoes) {
           const completada = await isQuestaoCompleted(questao.id);
           if (completada) {
             questoesCompletadasSet.add(questao.id);
