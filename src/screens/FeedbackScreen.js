@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Dim
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { AntDesign, MaterialIcons } from '@expo/vector-icons';
+import { enviarFeedback } from '../services/feedbackService';
 
 // Funções de responsividade simples
 const wp = (percentage) => {
@@ -123,6 +124,13 @@ const FeedbackScreen = () => {
 
   const handleContinuar = () => {
     navigation.navigate('Desafios', { trilhaId, moduloId });
+  };
+
+  const handleAvaliar = async () => {
+    try {
+      await enviarFeedback({ tipo: 'questao', itemId: questaoId, rating: respostaCorreta ? 5 : 3 });
+    } catch (_) {}
+    handleContinuar();
   };
 
   const handleVoltar = () => {
@@ -391,9 +399,9 @@ const FeedbackScreen = () => {
             
             <TouchableOpacity
               style={[styles.button, styles.continuarButton]}
-              onPress={handleContinuar}
+              onPress={handleAvaliar}
             >
-              <Text style={styles.buttonText}>Continuar</Text>
+              <Text style={styles.buttonText}>Avaliar e continuar</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
