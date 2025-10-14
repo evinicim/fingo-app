@@ -9,6 +9,7 @@ import { useFonts } from 'expo-font';
 import { AntDesign, Feather, MaterialIcons } from '@expo/vector-icons';
 import { getTrilhasWithUnlockStatus, debugTrilhasStatus, resetProgress, simularTrilha1Completa } from '../services/progressService';
 import { getTrilhas } from '../services/contentService';
+import { getDesafiosAtivos, getDesafiosDoUsuario } from '../services/desafiosService';
 import TrilhaItem from '../components/TrilhaItem';
 // Funções de responsividade simples
 const wp = (percentage) => {
@@ -164,6 +165,8 @@ const HomeScreen = ({ navigation }) => {
   // Estados para trilhas com status de desbloqueio
   const [trilhasComStatus, setTrilhasComStatus] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [desafios, setDesafios] = useState([]);
+  const [desafiosUsuario, setDesafiosUsuario] = useState([]);
 
   const [fontsLoaded] = useFonts({
     'Outfit-Regular': require('../assets/fonts/Outfit-Regular.ttf'),
@@ -196,6 +199,11 @@ const HomeScreen = ({ navigation }) => {
         const status = await getTrilhasWithUnlockStatus();
         setTrilhasComStatus(status);
         await debugTrilhasStatus();
+        // carrega desafios (missões)
+        const ativos = await getDesafiosAtivos();
+        const meus = await getDesafiosDoUsuario();
+        setDesafios(ativos);
+        setDesafiosUsuario(meus);
         setLoading(false);
       } catch (error) {
         console.error('Erro ao carregar status das trilhas:', error);
@@ -384,6 +392,25 @@ const HomeScreen = ({ navigation }) => {
             {renderTrilhasResponsive()}
           </View>
         </View>
+
+        {/* Desafios (missões) */}
+        {desafios?.length > 0 && (
+          <View style={styles.trilhasSection}>
+            <Text style={styles.trilhasTitle}>Desafios Ativos</Text>
+            {desafios.map((d) => {
+              const meu = desafiosUsuario.find(x => x.id === d.id);
+              return (
+                <View key={d.id} style={{ backgroundColor: '#FFF', borderRadius: 12, padding: 16, marginBottom: 10, borderLeftWidth: 4, borderLeftColor: '#4A90E2' }}>
+                  <Text style={{ fontFamily: 'Outfit-Bold', fontSize: 16, color: '#1A1A1A' }}>{d.titulo}</Text>
+                  <Text style={{ fontFamily: 'Outfit-Regular', fontSize: 12, color: '#666', marginTop: 4 }}>{d.descricao}</Text>
+                  <Text style={{ fontFamily: 'Outfit-Regular', fontSize: 12, color: meu?.concluido ? '#58CC02' : '#999', marginTop: 8 }}>
+                    {meu?.concluido ? 'Concluído' : 'Em andamento'}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
