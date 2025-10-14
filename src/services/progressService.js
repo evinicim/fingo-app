@@ -257,21 +257,9 @@ export const isTrilhaCompletamenteConcluida = async (trilhaId) => {
       return false;
     }
     
-    // Buscar todas as questões da trilha
-    const { TRILHAS_MOCADAS } = await import('../data/mockdata');
-    const trilha = TRILHAS_MOCADAS.find(t => t.id === trilhaId);
-    
-    if (!trilha || !trilha.modulos) {
-      return false;
-    }
-    
-    // Verificar se todas as questões foram respondidas
-    const todasQuestoes = [];
-    Object.values(trilha.modulos).forEach(modulo => {
-      if (modulo.questoes) {
-        todasQuestoes.push(...modulo.questoes);
-      }
-    });
+    // Buscar todas as questões da trilha no Firestore
+    const qsSnap = await getDocs(query(collection(db, 'questao'), where('trilhaId', '==', trilhaId)));
+    const todasQuestoes = qsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
     
     // Verificar se todas as questões foram completadas
     for (const questao of todasQuestoes) {
