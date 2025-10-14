@@ -18,6 +18,7 @@ import HistoriaScreen from '../screens/HistoriaScreen';
 import QuestaoScreen from '../screens/QuestaoScreen';
 import FeedbackScreen from '../screens/FeedbackScreen';
 import ProfileSetupScreen from '../screens/ProfileSetupScreen';
+import ProfileEditScreen from '../screens/ProfileEditScreen';
 import PerfilScreen from '../screens/PerfilScreen';
 import NotificationScreen from '../screens/NotificationScreen';
 import PrivacidadeScreen from '../screens/PrivacidadeScreen';
@@ -78,6 +79,7 @@ const AppNavigator = () => {
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
       <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
+      <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
       <Stack.Screen name="PasswordRecovery" component={PasswordRecoveryScreen} />
       <Stack.Screen name="PasswordReset" component={PasswordResetScreen} />
       <Stack.Screen name="Main" component={MainTabNavigator} />

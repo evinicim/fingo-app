@@ -1,4 +1,4 @@
-import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig';
 
 // Função para salvar dados do perfil do usuário
@@ -119,6 +119,22 @@ export const criarUsuarioInicial = async (userId, email, nome) => {
     
   } catch (error) {
     console.error('❌ Erro ao criar usuário inicial:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Função para excluir conta do usuário
+export const excluirConta = async (userId) => {
+  try {
+    // Excluir documento do Firestore
+    const userRef = doc(db, 'users', userId);
+    await deleteDoc(userRef);
+    
+    console.log('✅ Dados do usuário excluídos do Firestore');
+    return { success: true };
+    
+  } catch (error) {
+    console.error('❌ Erro ao excluir dados do usuário:', error);
     return { success: false, error: error.message };
   }
 };

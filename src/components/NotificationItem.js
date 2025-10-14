@@ -1,20 +1,17 @@
 // components/NotificationItem.js
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, Switch } from 'react-native';
 
-const NotificationItem = ({ title }) => {
-  const [isEnabled, setIsEnabled] = useState(false);
-  const toggleSwitch = () => setIsEnabled(previousState => !previousState);
-
+const NotificationItem = ({ title, value, onValueChange }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
       <Switch
         trackColor={{ false: "#DEE2E6", true: "#17D689" }}
-        thumbColor={isEnabled ? "#FFFFFF" : "#FFFFFF"}
+        thumbColor={value ? "#FFFFFF" : "#FFFFFF"}
         ios_backgroundColor="#DEE2E6"
-        onValueChange={toggleSwitch}
-        value={isEnabled}
+        onValueChange={onValueChange}
+        value={value}
       />
     </View>
   );
