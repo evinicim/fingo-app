@@ -1,28 +1,60 @@
 /**
- * Script para popular o Firestore com dados iniciais
+ * Script para popular o Firestore com dados iniciais (Admin SDK)
  * Execute: node scripts/populateFirestore.js
  */
 
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, doc, setDoc } from 'firebase/firestore';
+import { initializeApp as initializeAdminApp, cert } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
 import * as dotenv from 'dotenv';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 
-// Carregar variáveis de ambiente
-dotenv.config();
+// Carregar variáveis de ambiente do arquivo .env na raiz do projeto
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-// Configuração do Firebase
-const firebaseConfig = {
-  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
-};
+// Inicializar Firebase Admin via service account
+let serviceAccountPath = process.env.FINGO_SERVICE_ACCOUNT
+  ? path.resolve(__dirname, process.env.FINGO_SERVICE_ACCOUNT)
+  : path.resolve(__dirname, 'fingo-app-5d9ec-firebase-adminsdk-fbsvc-c633fb1966.json');
 
-// Inicializar Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+if (!fs.existsSync(serviceAccountPath)) {
+  // fallback padrão
+  const fallback = path.resolve(__dirname, 'serviceAccountKey.json');
+  if (fs.existsSync(fallback)) {
+    serviceAccountPath = fallback;
+  } else {
+    console.error('❌ Arquivo de service account não encontrado em:', serviceAccountPath);
+    console.error('   Coloque o JSON em scripts/ e tente novamente.');
+    process.exit(1);
+  }
+}
+
+const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf-8'));
+initializeAdminApp({ credential: cert(serviceAccount) });
+const db = getFirestore();
+
+// Remove campos undefined/NaN recursivamente (Firestore não aceita)
+function sanitize(value) {
+  if (Array.isArray(value)) {
+    return value.map(sanitize).filter((v) => v !== undefined);
+  }
+  if (value && typeof value === 'object') {
+    const out = {};
+    for (const [k, v] of Object.entries(value)) {
+      const sv = sanitize(v);
+      if (sv !== undefined) out[k] = sv;
+    }
+    return out;
+  }
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) return undefined;
+  }
+  if (value === undefined) return undefined;
+  return value;
+}
 
 // ============================================
 // DADOS: TRILHAS
@@ -407,40 +439,41 @@ const badges = [
 // ============================================
 async function populateFirestore() {
   console.log('🚀 Iniciando população do Firestore...\n');
+  console.log(`📁 Projeto (service account): ${serviceAccount.project_id}`);
 
   try {
     // Criar Trilhas
     console.log('📚 Criando trilhas...');
     for (const trilha of trilhas) {
-      await setDoc(doc(db, 'trilhaId', trilha.id), trilha);
+      await db.collection('trilhaId').doc(trilha.id).set(sanitize(trilha), { merge: true });
       console.log(`  ✅ Trilha criada: ${trilha.titulo}`);
     }
 
     // Criar Módulos
     console.log('\n📦 Criando módulos...');
     for (const modulo of modulos) {
-      await setDoc(doc(db, 'moduloId', modulo.id), modulo);
+      await db.collection('moduloId').doc(modulo.id).set(sanitize(modulo), { merge: true });
       console.log(`  ✅ Módulo criado: ${modulo.titulo}`);
     }
 
     // Criar Histórias
     console.log('\n📖 Criando histórias...');
     for (const historia of historias) {
-      await setDoc(doc(db, 'historias', historia.id), historia);
+      await db.collection('historias').doc(historia.id).set(sanitize(historia), { merge: true });
       console.log(`  ✅ História criada: ${historia.titulo}`);
     }
 
     // Criar Questões
     console.log('\n❓ Criando questões...');
     for (const questao of questoes) {
-      await setDoc(doc(db, 'questao', questao.id), questao);
+      await db.collection('questao').doc(questao.id).set(sanitize(questao), { merge: true });
       console.log(`  ✅ Questão criada: ${questao.enunciado.substring(0, 50)}...`);
     }
 
     // Criar Badges
     console.log('\n🎖️ Criando badges...');
     for (const badge of badges) {
-      await setDoc(doc(db, 'badges', badge.id), badge);
+      await db.collection('badges').doc(badge.id).set(sanitize(badge), { merge: true });
       console.log(`  ✅ Badge criado: ${badge.nome}`);
     }
 

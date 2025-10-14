@@ -7,8 +7,8 @@
     "populate": "node populateFirestore.js"
   },
   "dependencies": {
+    "dotenv": "^16.3.1",
     "firebase": "^10.7.1",
-    "dotenv": "^16.3.1"
+    "firebase-admin": "^13.5.0"
   }
 }
-
