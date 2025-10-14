@@ -18,7 +18,7 @@ const hp = (percentage) => {
 };
 
 // Componente para item de questão
-const QuestaoItem = ({ questao, onPress, isCompleted = false }) => {
+const QuestaoItem = ({ questao, onPress, isCompleted = false, index }) => {
   const getDificuldadeColor = (dificuldade) => {
     switch (dificuldade) {
       case 'facil': return '#58CC02';
@@ -110,13 +110,13 @@ const QuestaoItem = ({ questao, onPress, isCompleted = false }) => {
       activeOpacity={0.7}
     >
       <View style={styles.questaoHeader}>
-        <Text style={styles.questaoTitulo}>Questão {questao.id.split('_').pop()}</Text>
+        <Text style={styles.questaoTitulo}>Questão {index + 1}</Text>
         <View style={styles.dificuldadeBadge}>
           <Text style={styles.dificuldadeText}>{getDificuldadeText(questao.dificuldade)}</Text>
         </View>
       </View>
       
-      <Text style={styles.questaoPergunta} numberOfLines={2}>
+      <Text style={styles.questaoPergunta} numberOfLines={3}>
         {questao.pergunta}
       </Text>
       
@@ -300,6 +300,12 @@ const DesafiosScreen = () => {
     },
     questoesList: {
       flex: 1,
+      gap: 10,
+    },
+    gridContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
     },
     emptyState: {
       flex: 1,
@@ -414,14 +420,16 @@ const DesafiosScreen = () => {
               </TouchableOpacity>
             </View>
           ) : questoes.length > 0 ? (
-            <View style={styles.questoesList}>
+            <View style={[styles.questoesList, styles.gridContainer]}>
               {questoes.map((questao, index) => (
-                <QuestaoItem
-                  key={questao.id}
-                  questao={questao}
-                  onPress={handleQuestaoPress}
-                  isCompleted={questoesCompletadas.has(questao.id)}
-                />
+                <View key={questao.id} style={{ width: '48%' }}>
+                  <QuestaoItem
+                    questao={questao}
+                    index={index}
+                    onPress={handleQuestaoPress}
+                    isCompleted={questoesCompletadas.has(questao.id)}
+                  />
+                </View>
               ))}
             </View>
           ) : (

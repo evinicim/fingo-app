@@ -179,7 +179,7 @@ const HomeScreen = ({ navigation }) => {
   const userData = {
     name: "Jovem Financista",
     streak: 7,
-    totalTrilhas: TRILHAS_MOCADAS.length,
+    totalTrilhas: trilhas.length,
     trilhasConcluidas: trilhasComStatus.filter(t => t.progresso === 100).length,
     xp: 1250,
   };
