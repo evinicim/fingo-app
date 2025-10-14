@@ -233,7 +233,8 @@ const HomeScreen = ({ navigation }) => {
   // Animação de pulso para trilhas disponíveis
   useEffect(() => {
     const pulseAnimation = () => {
-      trilhas.forEach((trilha, index) => {
+      const ordered = [...trilhas].sort((a, b) => (a?.ordem ?? 999) - (b?.ordem ?? 999));
+      ordered.forEach((trilha, index) => {
         if (!trilha.bloqueada && trilha.progresso === 0) {
           Animated.loop(
             Animated.sequence([
@@ -312,7 +313,8 @@ const HomeScreen = ({ navigation }) => {
 
   // Renderizar trilhas em layout responsivo
   const renderTrilhasResponsive = () => {
-    return trilhas.map((trilha, index) => {
+    const ordered = [...trilhas].sort((a, b) => (a?.ordem ?? 999) - (b?.ordem ?? 999));
+    return ordered.map((trilha, index) => {
       const trilhaStatus = trilhasComStatus.find(t => t.id === trilha.id);
       const trilhaComStatus = {
         ...trilha,
