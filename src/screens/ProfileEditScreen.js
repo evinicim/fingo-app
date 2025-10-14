@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -7,20 +7,22 @@ import {
   TouchableOpacity, 
   TextInput, 
   Alert,
+  ActivityIndicator,
   Dimensions 
 } from 'react-native';
-// CORREÇÃO AQUI: Importação da biblioteca correta
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
-import { salvarDadosPerfil } from '../services/userService';
+import { buscarDadosPerfil, atualizarDadosPerfil } from '../services/userService';
 import { auth } from '../services/firebaseConfig';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
-const ProfileSetupScreen = () => {
+const ProfileEditScreen = () => {
   const navigation = useNavigation();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState(null);
   const [idade, setIdade] = useState('');
   const [nivelConhecimento, setNivelConhecimento] = useState(null);
@@ -48,7 +50,48 @@ const ProfileSetupScreen = () => {
     { id: 'avancado', label: 'Avançado', description: 'Tenho conhecimento sólido em finanças', icon: '💎' },
   ];
 
-  const handleContinuar = async () => {
+  // Carregar dados atuais do perfil
+  useEffect(() => {
+    carregarDadosPerfil();
+  }, []);
+
+  const carregarDadosPerfil = async () => {
+    try {
+      setLoading(true);
+      const userId = auth.currentUser?.uid;
+      
+      if (!userId) {
+        Alert.alert('Erro', 'Usuário não autenticado');
+        navigation.goBack();
+        return;
+      }
+
+      const resultado = await buscarDadosPerfil(userId);
+      
+      if (resultado.success) {
+        const { avatar, idade: idadeAtual, nivelConhecimento: nivelAtual } = resultado.data;
+        
+        // Configurar avatar
+        if (typeof avatar === 'object' && avatar.id) {
+          setSelectedAvatar(avatar);
+        } else if (typeof avatar === 'string') {
+          // Se for emoji string, encontrar o avatar correspondente
+          const avatarEncontrado = avatares.find(a => a.icon === avatar);
+          setSelectedAvatar(avatarEncontrado || avatares[0]);
+        }
+        
+        setIdade(idadeAtual ? idadeAtual.toString() : '');
+        setNivelConhecimento(nivelAtual || null);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar dados do perfil:', error);
+      Alert.alert('Erro', 'Não foi possível carregar os dados do perfil');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSalvar = async () => {
     // Validações
     if (!selectedAvatar) {
       Alert.alert('Atenção', 'Por favor, selecione um avatar!');
@@ -71,47 +114,53 @@ const ProfileSetupScreen = () => {
       return;
     }
 
-    // Dados do perfil
-    const dadosPerfil = {
+    // Dados atualizados
+    const dadosAtualizados = {
       avatar: selectedAvatar,
       idade: idadeNum,
       nivelConhecimento: nivelConhecimento,
-      dataConfiguracao: new Date().toISOString(),
     };
 
     try {
-      // Salvar dados no Firebase
+      setSaving(true);
       const userId = auth.currentUser?.uid;
+      
       if (!userId) {
-        Alert.alert('Erro', 'Usuário não autenticado. Faça login novamente.');
+        Alert.alert('Erro', 'Usuário não autenticado');
         return;
       }
 
-      const resultado = await salvarDadosPerfil(userId, dadosPerfil);
+      const resultado = await atualizarDadosPerfil(userId, dadosAtualizados);
       
       if (resultado.success) {
         Alert.alert(
           'Sucesso!', 
-          'Perfil configurado com sucesso! Bem-vindo ao FinGo!',
+          'Perfil atualizado com sucesso!',
           [
             {
-              text: 'Continuar',
-              onPress: () => navigation.navigate('Main', { screen: 'Home' })
+              text: 'OK',
+              onPress: () => navigation.goBack()
             }
           ]
         );
       } else {
-        Alert.alert('Erro', 'Não foi possível salvar os dados do perfil. Tente novamente.');
+        Alert.alert('Erro', 'Não foi possível atualizar o perfil. Tente novamente.');
       }
       
     } catch (error) {
-      console.error('Erro ao salvar perfil:', error);
+      console.error('Erro ao atualizar perfil:', error);
       Alert.alert('Erro', 'Ocorreu um erro inesperado. Tente novamente.');
+    } finally {
+      setSaving(false);
     }
   };
 
-  if (!fontsLoaded) {
-    return null;
+  if (!fontsLoaded || loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4CAF50" />
+      </View>
+    );
   }
 
   return (
@@ -126,22 +175,14 @@ const ProfileSetupScreen = () => {
           >
             <MaterialIcons name="arrow-back" size={24} color="#333" />
           </TouchableOpacity>
-          <Text style={styles.title}>Configure seu Perfil</Text>
+          <Text style={styles.title}>Editar Perfil</Text>
           <View style={styles.placeholder} />
-        </View>
-
-        {/* Progress Indicator */}
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <View style={styles.progressFill} />
-          </View>
-          <Text style={styles.progressText}>Passo 1 de 1</Text>
         </View>
 
         {/* Avatar Selection */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Escolha seu Avatar</Text>
-          <Text style={styles.sectionSubtitle}>Selecione como você quer aparecer no app</Text>
+          <Text style={styles.sectionTitle}>Avatar</Text>
+          <Text style={styles.sectionSubtitle}>Escolha como você quer aparecer</Text>
           
           <View style={styles.avatarGrid}>
             {avatares.map((avatar) => (
@@ -167,8 +208,8 @@ const ProfileSetupScreen = () => {
 
         {/* Age Input */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Qual sua idade?</Text>
-          <Text style={styles.sectionSubtitle}>Isso nos ajuda a personalizar sua experiência</Text>
+          <Text style={styles.sectionTitle}>Idade</Text>
+          <Text style={styles.sectionSubtitle}>Atualize sua idade se necessário</Text>
           
           <View style={styles.inputContainer}>
             <TextInput
@@ -185,8 +226,8 @@ const ProfileSetupScreen = () => {
 
         {/* Knowledge Level */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Qual seu nível de conhecimento financeiro?</Text>
-          <Text style={styles.sectionSubtitle}>Escolha a opção que melhor te descreve</Text>
+          <Text style={styles.sectionTitle}>Nível de Conhecimento Financeiro</Text>
+          <Text style={styles.sectionSubtitle}>Como você se sente em relação às finanças?</Text>
           
           <View style={styles.knowledgeContainer}>
             {niveisConhecimento.map((nivel) => (
@@ -226,13 +267,20 @@ const ProfileSetupScreen = () => {
           </View>
         </View>
 
-        {/* Continue Button */}
+        {/* Save Button */}
         <TouchableOpacity 
-          style={styles.continueButton}
-          onPress={handleContinuar}
+          style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+          onPress={handleSalvar}
+          disabled={saving}
         >
-          <Text style={styles.continueButtonText}>Continuar</Text>
-          <MaterialIcons name="arrow-forward" size={20} color="#FFF" />
+          {saving ? (
+            <ActivityIndicator size="small" color="#FFF" />
+          ) : (
+            <>
+              <Text style={styles.saveButtonText}>Salvar Alterações</Text>
+              <MaterialIcons name="check" size={20} color="#FFF" />
+            </>
+          )}
         </TouchableOpacity>
 
       </ScrollView>
@@ -244,6 +292,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F9FA',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollContent: {
     paddingBottom: 30,
@@ -265,28 +318,6 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     width: 40,
-  },
-  progressContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 30,
-  },
-  progressBar: {
-    height: 4,
-    backgroundColor: '#E9ECEF',
-    borderRadius: 2,
-    marginBottom: 8,
-  },
-  progressFill: {
-    height: '100%',
-    width: '100%',
-    backgroundColor: '#4CAF50',
-    borderRadius: 2,
-  },
-  progressText: {
-    fontSize: 14,
-    fontFamily: 'Outfit-Regular',
-    color: '#666',
-    textAlign: 'center',
   },
   section: {
     paddingHorizontal: 20,
@@ -413,7 +444,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: '#4CAF50',
   },
-  continueButton: {
+  saveButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -423,11 +454,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 8,
   },
-  continueButtonText: {
+  saveButtonDisabled: {
+    backgroundColor: '#A5D6A7',
+  },
+  saveButtonText: {
     fontSize: 16,
     fontFamily: 'Outfit-Bold',
     color: '#FFF',
   },
 });
 
-export default ProfileSetupScreen;
+export default ProfileEditScreen;
+

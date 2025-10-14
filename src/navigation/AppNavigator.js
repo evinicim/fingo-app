@@ -3,8 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 // IMPORTAÇÕES CORRETAS DOS ÍCONES
-import AntDesign from 'react-native-vector-icons/AntDesign';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 // Importe todas as telas
 import OnboardingScreen from '../screens/OnboardingScreen';
@@ -14,10 +13,12 @@ import PasswordRecoveryScreen from '../screens/PasswordRecoveryScreen';
 import PasswordResetScreen from '../screens/PasswordResetScreen';
 import HomeScreen from '../screens/HomeScreen';
 import DesafiosScreen from '../screens/DesafiosScreen';
+import DesafiosHubScreen from '../screens/DesafiosHubScreen';
 import HistoriaScreen from '../screens/HistoriaScreen';
 import QuestaoScreen from '../screens/QuestaoScreen';
 import FeedbackScreen from '../screens/FeedbackScreen';
 import ProfileSetupScreen from '../screens/ProfileSetupScreen';
+import ProfileEditScreen from '../screens/ProfileEditScreen';
 import PerfilScreen from '../screens/PerfilScreen';
 import NotificationScreen from '../screens/NotificationScreen';
 import PrivacidadeScreen from '../screens/PrivacidadeScreen';
@@ -43,13 +44,13 @@ function MainTabNavigator() {
         options={{
           tabBarLabel: 'Home',
           tabBarIcon: ({ color, size }) => (
-            <AntDesign name="home" size={size} color={color} />
+            <MaterialIcons name="home" size={size} color={color} />
           ),
         }}
       />
       <Tab.Screen 
         name="Desafios" 
-        component={DesafiosScreen} 
+        component={DesafiosHubScreen} 
         options={{
           tabBarLabel: 'Desafios',
           tabBarIcon: ({ color, size }) => (
@@ -63,7 +64,7 @@ function MainTabNavigator() {
         options={{
           tabBarLabel: 'Perfil',
           tabBarIcon: ({ color, size }) => (
-            <AntDesign name="user" size={size} color={color} />
+            <MaterialIcons name="person" size={size} color={color} />
           ),
         }}
       />
@@ -78,6 +79,7 @@ const AppNavigator = () => {
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
       <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
+      <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
       <Stack.Screen name="PasswordRecovery" component={PasswordRecoveryScreen} />
       <Stack.Screen name="PasswordReset" component={PasswordResetScreen} />
       <Stack.Screen name="Main" component={MainTabNavigator} />

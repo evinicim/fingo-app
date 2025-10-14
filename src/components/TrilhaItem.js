@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions } from 'react-native';
-import { AntDesign, MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 // Funções de responsividade personalizadas
 const wp = (percentage) => {
   const { width } = Dimensions.get('window');
@@ -189,7 +189,7 @@ const TrilhaItem = ({ trilha, onPress }) => {
         {/* Badges de conquista */}
         {state === 'completed' && (
           <View style={styles.completedBadge}>
-            <AntDesign name="star" size={14} color="#FFD700" />
+            <MaterialIcons name="star" size={14} color="#FFD700" />
           </View>
         )}
         

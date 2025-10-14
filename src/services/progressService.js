@@ -1,7 +1,13 @@
 // Serviço para gerenciar o progresso do usuário
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { auth, db } from './firebaseConfig';
+import { collection, doc, getDoc, setDoc, updateDoc, getDocs, query, where } from 'firebase/firestore';
+import { getTrilhas, getModulosByTrilha } from './contentService';
 
-const PROGRESS_KEY = 'user_progress';
+const getProgressKey = () => {
+  const uid = auth.currentUser?.uid;
+  return uid ? `user_progress_${uid}` : 'user_progress';
+};
 
 // Estrutura de progresso do usuário
 const defaultProgress = {
@@ -14,9 +20,17 @@ const defaultProgress = {
 // Função para carregar progresso do usuário
 export const loadUserProgress = async () => {
   try {
-    const progressData = await AsyncStorage.getItem(PROGRESS_KEY);
+    const progressData = await AsyncStorage.getItem(getProgressKey());
     if (progressData) {
-      return JSON.parse(progressData);
+      const parsed = JSON.parse(progressData);
+      // Migração: ids antigos de questões (q_1_1_1) não são compatíveis
+      const hasLegacyIds = Array.isArray(parsed?.questoesCompletadas) && parsed.questoesCompletadas.some(q => /^q_\d/.test(q?.id));
+      if (hasLegacyIds) {
+        const migrated = { ...defaultProgress, historiasConcluidas: parsed.historiasConcluidas || [] };
+        await saveUserProgress(migrated);
+        return migrated;
+      }
+      return parsed;
     }
     return defaultProgress;
   } catch (error) {
@@ -32,7 +46,13 @@ export const saveUserProgress = async (progress) => {
       ...progress,
       ultimaAtualizacao: new Date().toISOString()
     };
-    await AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(progressToSave));
+    await AsyncStorage.setItem(getProgressKey(), JSON.stringify(progressToSave));
+    // Persistir no Firestore se logado
+    const uid = auth.currentUser?.uid;
+    if (uid) {
+      const ref = doc(db, 'users', uid);
+      await setDoc(ref, { progressoCache: progressToSave }, { merge: true });
+    }
     return true;
   } catch (error) {
     console.error('Erro ao salvar progresso:', error);
@@ -69,7 +89,7 @@ export const isHistoriaCompleted = async (trilhaId) => {
 };
 
 // Função para marcar questão como completada
-export const markQuestaoAsCompleted = async (questaoId, pontuacao = 0) => {
+export const markQuestaoAsCompleted = async (questaoId, trilhaId, respostaSelecionada = null, correta = false, pontuacao = 0) => {
   try {
     const progress = await loadUserProgress();
     
@@ -77,15 +97,40 @@ export const markQuestaoAsCompleted = async (questaoId, pontuacao = 0) => {
     if (questaoExistente) {
       questaoExistente.pontuacao = Math.max(questaoExistente.pontuacao, pontuacao);
       questaoExistente.dataConclusao = new Date().toISOString();
+      questaoExistente.trilhaId = trilhaId || questaoExistente.trilhaId;
+      questaoExistente.correta = typeof correta === 'boolean' ? correta : questaoExistente.correta;
+      questaoExistente.respostaSelecionada = respostaSelecionada;
     } else {
       progress.questoesCompletadas.push({
         id: questaoId,
+        trilhaId,
+        correta,
+        respostaSelecionada,
         pontuacao,
         dataConclusao: new Date().toISOString()
       });
     }
     
     await saveUserProgress(progress);
+
+    // Persistir resultado detalhado no Firestore
+    const userId = auth.currentUser?.uid;
+    if (userId && trilhaId) {
+      const questaoRef = doc(db, 'users', userId, 'progresso', trilhaId, 'questoes', questaoId);
+      await setDoc(questaoRef, {
+        questaoId,
+        trilhaId,
+        correta,
+        respostaSelecionada,
+        pontuacao,
+        dataConclusao: new Date().toISOString()
+      }, { merge: true });
+
+      // Atualiza documento agregador por trilha com lista de IDs concluídos
+      const idsDaTrilha = progress.questoesCompletadas.filter(q => q.trilhaId === trilhaId).map(q => q.id);
+      const progRef = doc(db, 'users', userId, 'progresso', trilhaId);
+      await setDoc(progRef, { questoesCompletadas: idsDaTrilha }, { merge: true });
+    }
     return true;
   } catch (error) {
     console.error('Erro ao marcar questão como completada:', error);
@@ -94,10 +139,20 @@ export const markQuestaoAsCompleted = async (questaoId, pontuacao = 0) => {
 };
 
 // Função para verificar se questão foi completada
-export const isQuestaoCompleted = async (questaoId) => {
+export const isQuestaoCompleted = async (questaoId, trilhaId) => {
   try {
     const progress = await loadUserProgress();
-    return progress.questoesCompletadas.some(q => q.id === questaoId);
+    if (progress.questoesCompletadas.some(q => q.id === questaoId)) {
+      return true;
+    }
+    // Verificar no Firestore
+    const userId = auth.currentUser?.uid;
+    if (userId && trilhaId) {
+      const qRef = doc(db, 'users', userId, 'progresso', trilhaId, 'questoes', questaoId);
+      const snap = await getDoc(qRef);
+      if (snap.exists()) return true;
+    }
+    return false;
   } catch (error) {
     console.error('Erro ao verificar conclusão da questão:', error);
     return false;
@@ -121,24 +176,26 @@ export const updateTrilhaProgress = async (trilhaId, progresso) => {
 export const calculateTrilhaProgress = async (trilhaId) => {
   try {
     const progress = await loadUserProgress();
-    
-    // Buscar dados da trilha
-    const { TRILHAS_MOCADAS } = await import('../data/mockdata');
-    const trilha = TRILHAS_MOCADAS.find(t => t.id === trilhaId);
-    
-    if (!trilha || !trilha.modulos) {
-      return 0;
-    }
-    
-    // Calcular total de itens (1 história + todas as questões)
-    const todasQuestoes = [];
-    Object.values(trilha.modulos).forEach(modulo => {
-      if (modulo.questoes) {
-        todasQuestoes.push(...modulo.questoes);
+    // Buscar questões da trilha; se não retornar nada (dados antigos), faz fallback por módulos
+    let questoesDocs = [];
+    try {
+      const qsSnap = await getDocs(query(collection(db, 'questao'), where('trilhaId', '==', trilhaId)));
+      questoesDocs = qsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (_) {}
+    if (!Array.isArray(questoesDocs) || questoesDocs.length === 0) {
+      // Fallback: agrega questões por cada módulo da trilha
+      const modulos = await getModulosByTrilha(trilhaId);
+      const agregadas = [];
+      for (const m of modulos) {
+        try {
+          const snap = await getDocs(query(collection(db, 'questao'), where('moduloId', '==', m.id)));
+          snap.docs.forEach(d => agregadas.push({ id: d.id, ...d.data() }));
+        } catch (_) {}
       }
-    });
-    
-    const totalItens = 1 + todasQuestoes.length; // 1 história + questões
+      questoesDocs = agregadas;
+    }
+    const totalQuestoes = questoesDocs.length;
+    const totalItens = 1 + totalQuestoes; // 1 história + questões
     let itensCompletados = 0;
     
     // Verificar se história foi concluída (50% do progresso)
@@ -146,10 +203,17 @@ export const calculateTrilhaProgress = async (trilhaId) => {
       itensCompletados += 1;
     }
     
-    // Verificar questões completadas (50% do progresso)
-    const questoesCompletadas = todasQuestoes.filter(questao => 
-      progress.questoesCompletadas.some(q => q.id === questao.id)
-    ).length;
+    // Verificar questões completadas (50% do progresso) usando IDs reais da trilha + Firestore
+    const questoesIdsCompletas = new Set(progress.questoesCompletadas
+      .filter(q => q.trilhaId === trilhaId)
+      .map(q => q.id));
+
+    const userId = auth.currentUser?.uid;
+    if (userId) {
+      const concluSnap = await getDocs(collection(db, 'users', userId, 'progresso', trilhaId, 'questoes'));
+      concluSnap.docs.forEach(d => questoesIdsCompletas.add(d.id));
+    }
+    const questoesCompletadas = questoesDocs.filter(q => questoesIdsCompletas.has(q.id)).length;
     
     itensCompletados += questoesCompletadas;
     
@@ -158,6 +222,18 @@ export const calculateTrilhaProgress = async (trilhaId) => {
     
     // Salvar progresso calculado
     await updateTrilhaProgress(trilhaId, porcentagem);
+    // Persistir no Firestore por trilha
+    const userId2 = auth.currentUser?.uid;
+    if (userId2) {
+      const progRef = doc(db, 'users', userId2, 'progresso', trilhaId);
+      await setDoc(progRef, {
+        progresso: porcentagem,
+        historiasConcluidas: progress.historiasConcluidas.includes(trilhaId),
+        // Salva apenas IDs; detalhes ficam na subcoleção 'questoes'
+        questoesCompletadas: Array.from(questoesIdsCompletas),
+        dataAtualizacao: new Date().toISOString(),
+      }, { merge: true });
+    }
     
     return porcentagem;
   } catch (error) {
@@ -180,65 +256,15 @@ export const getTrilhaProgress = async (trilhaId) => {
 // Função para verificar se uma trilha está desbloqueada
 export const isTrilhaUnlocked = async (trilhaId) => {
   try {
-    const progress = await loadUserProgress();
-    
     // A primeira trilha sempre está desbloqueada
-    if (trilhaId === 'trilha_01') {
-      return true;
-    }
-    
-    // Para outras trilhas, verificar se a anterior foi COMPLETAMENTE concluída
+    if (trilhaId === 'trilha_01') return true;
+
+    // Para outras trilhas: desbloqueia se a trilha anterior estiver 100% concluída
     const trilhaAnterior = getTrilhaAnterior(trilhaId);
-    if (trilhaAnterior) {
-      // Verificar se a trilha anterior tem história concluída
-      const historiaConcluida = progress.historiasConcluidas.includes(trilhaAnterior);
-      if (!historiaConcluida) {
-        return false;
-      }
-      
-      // Verificar se todas as questões da trilha anterior foram respondidas
-      const { TRILHAS_MOCADAS } = await import('../data/mockdata');
-      const trilhaAnteriorData = TRILHAS_MOCADAS.find(t => t.id === trilhaAnterior);
-      
-      if (!trilhaAnteriorData || !trilhaAnteriorData.modulos) {
-        return false;
-      }
-      
-      // Buscar todas as questões da trilha anterior
-      const todasQuestoesAnterior = [];
-      Object.values(trilhaAnteriorData.modulos).forEach(modulo => {
-        if (modulo.questoes) {
-          todasQuestoesAnterior.push(...modulo.questoes);
-        }
-      });
-      
-      console.log(`\n🔍 Verificando desbloqueio da ${trilhaId}:`);
-      console.log(`📚 Trilha anterior: ${trilhaAnterior}`);
-      console.log(`📖 História da ${trilhaAnterior} concluída: ${historiaConcluida}`);
-      console.log(`❓ Questões da ${trilhaAnterior}:`, todasQuestoesAnterior.map(q => q.id));
-      console.log(`✅ Questões completadas:`, progress.questoesCompletadas.map(q => q.id));
-      
-      // Verificar se todas as questões foram completadas
-      let questoesFaltando = [];
-      for (const questao of todasQuestoesAnterior) {
-        const questaoCompleta = progress.questoesCompletadas.some(q => q.id === questao.id);
-        console.log(`   ${questaoCompleta ? '✅' : '❌'} ${questao.id}: ${questaoCompleta ? 'Completa' : 'Faltando'}`);
-        if (!questaoCompleta) {
-          questoesFaltando.push(questao.id);
-        }
-      }
-      
-      if (questoesFaltando.length > 0) {
-        console.log(`❌ ${trilhaId} BLOQUEADA: Faltam ${questoesFaltando.length} questões da ${trilhaAnterior}:`, questoesFaltando);
-        return false;
-      }
-      
-      console.log(`✅ ${trilhaId} DESBLOQUEADA: Todas as questões da ${trilhaAnterior} foram respondidas!`);
-      
-      return true;
-    }
-    
-    return false;
+    if (!trilhaAnterior) return false;
+
+    const progressoAnterior = await calculateTrilhaProgress(trilhaAnterior);
+    return progressoAnterior >= 100;
   } catch (error) {
     console.error('Erro ao verificar desbloqueio da trilha:', error);
     return false;
@@ -263,21 +289,9 @@ export const isTrilhaCompletamenteConcluida = async (trilhaId) => {
       return false;
     }
     
-    // Buscar todas as questões da trilha
-    const { TRILHAS_MOCADAS } = await import('../data/mockdata');
-    const trilha = TRILHAS_MOCADAS.find(t => t.id === trilhaId);
-    
-    if (!trilha || !trilha.modulos) {
-      return false;
-    }
-    
-    // Verificar se todas as questões foram respondidas
-    const todasQuestoes = [];
-    Object.values(trilha.modulos).forEach(modulo => {
-      if (modulo.questoes) {
-        todasQuestoes.push(...modulo.questoes);
-      }
-    });
+    // Buscar todas as questões da trilha no Firestore
+    const qsSnap = await getDocs(query(collection(db, 'questao'), where('trilhaId', '==', trilhaId)));
+    const todasQuestoes = qsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
     
     // Verificar se todas as questões foram completadas
     for (const questao of todasQuestoes) {
@@ -298,27 +312,56 @@ export const isTrilhaCompletamenteConcluida = async (trilhaId) => {
 export const getTrilhasWithUnlockStatus = async () => {
   try {
     const progress = await loadUserProgress();
-    const trilhas = ['trilha_01', 'trilha_02', 'trilha_03', 'trilha_04', 'trilha_05'];
-    
+    const trilhas = await getTrilhas();
     const trilhasComStatus = await Promise.all(
-      trilhas.map(async (trilhaId) => {
+      trilhas.map(async (t) => {
+        const trilhaId = t.id;
         const desbloqueada = await isTrilhaUnlocked(trilhaId);
         const historiaConcluida = progress.historiasConcluidas.includes(trilhaId);
         const progressoCalculado = await calculateTrilhaProgress(trilhaId);
-        
-        return {
-          id: trilhaId,
-          desbloqueada,
-          historiaConcluida,
-          progresso: progressoCalculado
-        };
+        return { id: trilhaId, desbloqueada, historiaConcluida, progresso: progressoCalculado };
       })
     );
-    
     return trilhasComStatus;
   } catch (error) {
     console.error('Erro ao obter status das trilhas:', error);
     return [];
+  }
+};
+
+// Estatísticas agregadas do usuário (dinâmicas)
+export const getUserStats = async () => {
+  try {
+    const uid = auth.currentUser?.uid;
+    const trilhas = await getTrilhas();
+    const totalTrilhas = trilhas.length;
+
+    // Concluir trilhas e somar progresso/xp
+    let trilhasConcluidas = 0;
+    let questoesRespondidas = 0;
+    let xpQuestoes = 0;
+
+    for (const t of trilhas) {
+      const prog = await calculateTrilhaProgress(t.id);
+      if (prog >= 100) trilhasConcluidas += 1;
+
+      if (uid) {
+        const qsSnap = await getDocs(collection(db, 'users', uid, 'progresso', t.id, 'questoes'));
+        questoesRespondidas += qsSnap.size;
+        qsSnap.docs.forEach((d) => { xpQuestoes += Number(d.data()?.pontuacao || 0); });
+      }
+    }
+
+    // XP por histórias concluídas (50 cada) usando cache local
+    const progress = await loadUserProgress();
+    const xpHistorias = (progress?.historiasConcluidas?.length || 0) * 50;
+    const xp = xpQuestoes + xpHistorias;
+    const level = Math.max(1, Math.floor(xp / 100) + 1);
+
+    return { totalTrilhas, trilhasConcluidas, questoesRespondidas, xp, level };
+  } catch (error) {
+    console.error('Erro ao calcular estatísticas do usuário:', error);
+    return { totalTrilhas: 0, trilhasConcluidas: 0, questoesRespondidas: 0, xp: 0, level: 1 };
   }
 };
 
@@ -376,16 +419,13 @@ export const simularTrilha1Completa = async () => {
       progress.historiasConcluidas.push('trilha_01');
     }
     
-    // Marcar todas as questões da Trilha 1 como concluídas
-    const questoesTrilha1 = ['q_1_1_1', 'q_1_1_2', 'q_1_1_3'];
-    for (const questaoId of questoesTrilha1) {
-      const questaoExistente = progress.questoesCompletadas.find(q => q.id === questaoId);
-      if (!questaoExistente) {
-        progress.questoesCompletadas.push({
-          id: questaoId,
-          pontuacao: 10,
-          dataConclusao: new Date().toISOString()
-        });
+    // Marcar todas as questões da Trilha 1 como concluídas (usando IDs reais do Firestore)
+    const qsSnap = await getDocs(query(collection(db, 'questao'), where('trilhaId', '==', 'trilha_01')));
+    for (const d of qsSnap.docs) {
+      const qid = d.id;
+      const existente = progress.questoesCompletadas.find(q => q.id === qid);
+      if (!existente) {
+        progress.questoesCompletadas.push({ id: qid, pontuacao: 10, dataConclusao: new Date().toISOString() });
       }
     }
     

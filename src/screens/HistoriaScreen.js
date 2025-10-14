@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Dimensions, Animated, Image, Alert } from 'react-native';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { AntDesign, MaterialIcons } from '@expo/vector-icons';
-import { TRILHAS_MOCADAS, getQuestoesByModulo } from '../data/mockdata';
+import { MaterialIcons } from '@expo/vector-icons';
+import { getTrilhaById, getModulosByTrilha, getHistoriaByModulo, getHistoriaByTrilha, getQuestoesCountByTrilha } from '../services/contentService';
 import { markHistoriaAsCompleted, isHistoriaCompleted, calculateTrilhaProgress, getTrilhaProgress } from '../services/progressService';
 
 // Funções de responsividade simples
@@ -89,12 +89,12 @@ const VideoPlayer = ({ progress = 0, onPlayPress }) => {
     <TouchableOpacity style={styles.videoContainer} onPress={onPlayPress} activeOpacity={0.8}>
       {isCompleted ? (
         <View style={styles.completedOverlay}>
-          <AntDesign name="checkcircle" size={40} color="#FFFFFF" />
+          <MaterialIcons name="check-circle" size={40} color="#FFFFFF" />
           <Text style={styles.completedText}>Vídeo Concluído!</Text>
         </View>
       ) : (
         <View style={styles.playButton}>
-          <AntDesign name="play" size={24} color="#FFFFFF" />
+          <MaterialIcons name="play-arrow" size={24} color="#FFFFFF" />
         </View>
       )}
       <View style={styles.progressBar}>
@@ -203,10 +203,12 @@ const HistoriaScreen = () => {
   
   const [trilha, setTrilha] = useState(null);
   const [historiaConcluida, setHistoriaConcluida] = useState(false);
+  const [historia, setHistoria] = useState(null);
   const [videoProgress, setVideoProgress] = useState(0);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [progressoReal, setProgressoReal] = useState(0);
   const [animacao] = useState(new Animated.Value(0));
+  const [totalQuestoes, setTotalQuestoes] = useState(0);
 
   const [fontsLoaded] = useFonts({
     'Outfit-Regular': require('../assets/fonts/Outfit-Regular.ttf'),
@@ -216,13 +218,32 @@ const HistoriaScreen = () => {
   useEffect(() => {
     const loadHistoriaState = async () => {
       if (trilhaId) {
-        const trilhaData = TRILHAS_MOCADAS.find(t => t.id === trilhaId);
+        const trilhaData = await getTrilhaById(trilhaId);
         setTrilha(trilhaData);
-        
+
+        // Carregar primeiro módulo de história da trilha
+        // Buscar história por módulo (preferencial) ou por trilha (fallback)
+        const modulos = await getModulosByTrilha(trilhaId);
+        const ordenados = [...modulos].sort((a,b) => (a?.ordem ?? 999) - (b?.ordem ?? 999));
+        const moduloHistoria = ordenados.find(m => (m?.tipo || '').toLowerCase() === 'historia') || ordenados[0];
+        let h = null;
+        if (moduloHistoria) {
+          h = await getHistoriaByModulo(moduloHistoria.id);
+        }
+        if (!h) {
+          h = await getHistoriaByTrilha(trilhaId);
+        }
+        setHistoria(h || null);
+
+        // Contar questões pela trilha (fonte única confiável)
+        const count = await getQuestoesCountByTrilha(trilhaId);
+        console.log('[Historia] trilhaId=', trilhaId, 'totalQuestoesPorTrilha=', count);
+        setTotalQuestoes(count);
+
         // Verificar se a história foi concluída
         const historiaCompleta = await isHistoriaCompleted(trilhaId);
         setHistoriaConcluida(historiaCompleta);
-        
+
         // Carregar progresso real da trilha
         const progresso = await getTrilhaProgress(trilhaId);
         setProgressoReal(progresso);
@@ -309,13 +330,7 @@ const HistoriaScreen = () => {
   };
 
   const handleIrParaDesafios = () => {
-    if (trilha && trilha.modulos) {
-      const primeiroModulo = Object.keys(trilha.modulos)[0];
-      navigation.navigate('Desafios', {
-        trilhaId: trilha.id,
-        moduloId: primeiroModulo
-      });
-    }
+    navigation.navigate('Desafios', { trilhaId: trilha.id });
   };
 
   const handleVoltar = () => {
@@ -490,14 +505,14 @@ const styles = StyleSheet.create({
     );
   }
 
-  const questoesDisponiveis = trilha.modulos ? Object.values(trilha.modulos).reduce((total, modulo) => total + modulo.questoes.length, 0) : 0;
+  const questoesDisponiveis = totalQuestoes;
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleVoltar}>
-          <AntDesign name="arrowleft" size={24} color="#FFFFFF" />
+          <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>História</Text>
@@ -524,23 +539,23 @@ const styles = StyleSheet.create({
           {/* Header da História */}
           <View style={styles.historiaHeader}>
             <Text style={styles.historiaTitulo}>
-              {trilha.historia.titulo}
+              {historia?.titulo || 'História'}
             </Text>
-            <Text style={styles.historiaDuracao}>
-              ⏱️ {trilha.historia.duracao}
-            </Text>
+            {historia?.duracao ? (
+              <Text style={styles.historiaDuracao}>⏱️ {historia.duracao}</Text>
+            ) : null}
           </View>
 
           {/* Conteúdo da História */}
           <Text style={styles.historiaConteudo}>
-            {trilha.historia.conteudo}
+            {historia?.conteudo || 'Conteúdo da história indisponível no momento.'}
           </Text>
 
           {/* Status da História */}
           <View style={styles.statusContainer}>
             <View style={styles.statusIcon}>
-              <AntDesign
-                name={historiaConcluida ? "checkcircle" : "clockcircle"}
+              <MaterialIcons
+                name={historiaConcluida ? "check-circle" : "schedule"}
                 size={24}
                 color={historiaConcluida ? "#58CC02" : "#FF9800"}
               />
