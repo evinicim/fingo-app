@@ -1,0 +1,14 @@
+{
+  "name": "fingo-scripts",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Scripts para popular o Firestore do FinGo",
+  "scripts": {
+    "populate": "node populateFirestore.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "firebase": "^10.7.1",
+    "firebase-admin": "^13.5.0"
+  }
+}

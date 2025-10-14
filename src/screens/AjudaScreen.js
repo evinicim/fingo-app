@@ -1,10 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
+import { useNavigation } from '@react-navigation/native';
+import { MaterialIcons } from '@expo/vector-icons';
 import AccordionItem from '../components/AccordionItem';
 
 const AjudaScreen = () => {
+    const navigation = useNavigation();
+    
     const [fontsLoaded] = useFonts({
         'Outfit-Regular': require('../assets/fonts/Outfit-Regular.ttf'),
         'Outfit-Bold': require('../assets/fonts/Outfit-Bold.ttf'),
@@ -37,7 +41,16 @@ const AjudaScreen = () => {
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                <Text style={styles.title}>Ajuda</Text>
+                <View style={styles.header}>
+                    <TouchableOpacity 
+                        style={styles.backButton}
+                        onPress={() => navigation.goBack()}
+                    >
+                        <MaterialIcons name="arrow-back" size={24} color="#333" />
+                    </TouchableOpacity>
+                    <Text style={styles.title}>Ajuda</Text>
+                    <View style={styles.placeholder} />
+                </View>
                 <View style={styles.accordionContainer}>
                     {faqData.map((item, index) => (
                         <AccordionItem
@@ -63,17 +76,28 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     scrollContent: {
-        alignItems: 'center',
         paddingHorizontal: 12,
-        paddingTop: 40,
         paddingBottom: 24,
+    },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 8,
+        paddingVertical: 15,
+        marginBottom: 20,
+    },
+    backButton: {
+        padding: 8,
     },
     title: {
         fontFamily: 'Outfit-Bold',
-        fontSize: 32,
-        lineHeight: 40,
+        fontSize: 24,
+        lineHeight: 30,
         color: '#000000',
-        marginBottom: 24,
+    },
+    placeholder: {
+        width: 40,
     },
     accordionContainer: {
         width: '100%',

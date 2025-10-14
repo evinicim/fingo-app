@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert, Dimensions } from 'react-native';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { AntDesign, MaterialIcons } from '@expo/vector-icons';
-import { TRILHAS_MOCADAS, getQuestoesByModulo } from '../data/mockdata';
+import { MaterialIcons } from '@expo/vector-icons';
+import { getModulosByTrilha, getQuestoesByTrilha } from '../services/contentService';
 import { isHistoriaCompleted, isQuestaoCompleted } from '../services/progressService';
 
 // Funções de responsividade simples
@@ -18,7 +18,7 @@ const hp = (percentage) => {
 };
 
 // Componente para item de questão
-const QuestaoItem = ({ questao, onPress, isCompleted = false }) => {
+const QuestaoItem = ({ questao, onPress, isCompleted = false, index }) => {
   const getDificuldadeColor = (dificuldade) => {
     switch (dificuldade) {
       case 'facil': return '#58CC02';
@@ -110,13 +110,13 @@ const QuestaoItem = ({ questao, onPress, isCompleted = false }) => {
       activeOpacity={0.7}
     >
       <View style={styles.questaoHeader}>
-        <Text style={styles.questaoTitulo}>Questão {questao.id.split('_').pop()}</Text>
+        <Text style={styles.questaoTitulo}>Questão {index + 1}</Text>
         <View style={styles.dificuldadeBadge}>
           <Text style={styles.dificuldadeText}>{getDificuldadeText(questao.dificuldade)}</Text>
         </View>
       </View>
       
-      <Text style={styles.questaoPergunta} numberOfLines={2}>
+      <Text style={styles.questaoPergunta} numberOfLines={3}>
         {questao.pergunta}
       </Text>
       
@@ -125,9 +125,9 @@ const QuestaoItem = ({ questao, onPress, isCompleted = false }) => {
           {questao.opcoes.length} opções
         </Text>
         <View style={styles.statusIcon}>
-          <AntDesign 
-            name={isCompleted ? "check" : "play"} 
-            size={12} 
+          <MaterialIcons 
+            name={isCompleted ? "check" : "play-arrow"} 
+            size={14} 
             color={isCompleted ? "#FFFFFF" : "#999999"} 
           />
         </View>
@@ -139,89 +139,88 @@ const QuestaoItem = ({ questao, onPress, isCompleted = false }) => {
 const DesafiosScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { trilhaId, moduloId } = route.params || { trilhaId: 'trilha_01', moduloId: 'modulo_1_1' };
+  const { trilhaId, moduloId } = route.params || { trilhaId: null, moduloId: null };
   
   const [questoes, setQuestoes] = useState([]);
   const [moduloInfo, setModuloInfo] = useState(null);
+  const [moduloSelecionadoId, setModuloSelecionadoId] = useState(null);
   const [questoesCompletadas, setQuestoesCompletadas] = useState(new Set());
   const [historiaConcluida, setHistoriaConcluida] = useState(false);
+  const [modulosQuiz, setModulosQuiz] = useState([]);
 
   const [fontsLoaded] = useFonts({
     'Outfit-Regular': require('../assets/fonts/Outfit-Regular.ttf'),
     'Outfit-Bold': require('../assets/fonts/Outfit-Bold.ttf'),
   });
 
+  const loadDesafiosState = async () => {
+    if (!trilhaId) return;
+    const modulos = await getModulosByTrilha(trilhaId);
+    const ordenados = [...modulos].sort((a,b) => (a?.ordem ?? 999) - (b?.ordem ?? 999));
+    setModulosQuiz(ordenados.filter(m => (m?.tipo || '').toLowerCase() === 'quiz'));
+
+    const moduloSel = moduloId ? ordenados.find(m => m.id === moduloId) : (ordenados.find(m => (m?.tipo || '').toLowerCase() === 'quiz') || ordenados[0]);
+    if (moduloSel) {
+      setModuloSelecionadoId(moduloSel.id);
+      setModuloInfo({ titulo: moduloSel.titulo, trilhaTitulo: '', descricao: moduloSel.descricao });
+    }
+
+    // Carregar questões apenas desta trilha
+    const qs = await getQuestoesByTrilha(trilhaId);
+    const normalizadas = qs.map(q => ({
+      id: q.id,
+      moduloId: q.moduloId,
+      dificuldade: q.dificuldade || 'facil',
+      pergunta: q.enunciado || q.pergunta || '',
+      opcoes: (q.opcoes || []).map(o => o.texto || o),
+      ordem: q.ordem ?? 999,
+    })).sort((a,b) => (a.ordem ?? 999) - (b.ordem ?? 999));
+    setQuestoes(normalizadas);
+
+    // Marcar concluídas desta trilha
+    const doneSet = new Set();
+    for (const q of normalizadas) {
+      const done = await isQuestaoCompleted(q.id, trilhaId);
+      if (done) doneSet.add(q.id);
+    }
+    setQuestoesCompletadas(doneSet);
+
+    const h = await isHistoriaCompleted(trilhaId);
+    setHistoriaConcluida(h);
+  };
+
   useEffect(() => {
-    const loadDesafiosState = async () => {
-      if (trilhaId && moduloId) {
-        const questoesData = getQuestoesByModulo(trilhaId, moduloId);
-        setQuestoes(questoesData);
-        
-        // Buscar informações do módulo
-        const trilha = TRILHAS_MOCADAS.find(t => t.id === trilhaId);
-        if (trilha && trilha.modulos && trilha.modulos[moduloId]) {
-          setModuloInfo({
-            titulo: trilha.modulos[moduloId].titulo,
-            trilhaTitulo: trilha.titulo,
-            descricao: trilha.descricao
-          });
-        }
-        
-        // Verificar se a história foi concluída
-        const historiaCompleta = await isHistoriaCompleted(trilhaId);
-        setHistoriaConcluida(historiaCompleta);
-        
-        // Verificar quais questões foram completadas
-        const questoesCompletadasSet = new Set();
-        for (const questao of questoesData) {
-          const completada = await isQuestaoCompleted(questao.id);
-          if (completada) {
-            questoesCompletadasSet.add(questao.id);
-          }
-        }
-        setQuestoesCompletadas(questoesCompletadasSet);
-      }
-    };
-    
     loadDesafiosState();
   }, [trilhaId, moduloId]);
 
   // Recarregar estado quando a tela ganha foco (ex: volta da QuestaoScreen)
-  useFocusEffect(
-    useCallback(() => {
-      const reloadState = async () => {
-        if (trilhaId && moduloId) {
-          // Verificar se a história foi concluída
-          const historiaCompleta = await isHistoriaCompleted(trilhaId);
-          setHistoriaConcluida(historiaCompleta);
-          
-          // Verificar quais questões foram completadas
-          const questoesCompletadasSet = new Set();
-          for (const questao of questoes) {
-            const completada = await isQuestaoCompleted(questao.id);
-            if (completada) {
-              questoesCompletadasSet.add(questao.id);
-            }
-          }
-          setQuestoesCompletadas(questoesCompletadasSet);
-        }
-      };
-      
-      reloadState();
-    }, [trilhaId, moduloId, questoes])
-  );
+  useFocusEffect(useCallback(() => { loadDesafiosState(); }, [trilhaId, moduloId]));
 
   const handleQuestaoPress = (questao) => {
     navigation.navigate('Questao', {
       questaoId: questao.id,
       trilhaId,
-      moduloId
+      // usar o módulo correto da própria questão
+      moduloId: questao.moduloId || moduloSelecionadoId
     });
   };
 
   const handleVoltar = () => {
     navigation.goBack();
   };
+
+  // Continuar para a próxima questão não respondida (sequencial)
+  const handleContinuarProxima = () => {
+    const proxima = questoes.find(q => !questoesCompletadas.has(q.id));
+    if (!proxima) {
+      Alert.alert('Tudo certo!', 'Você concluiu todas as questões desta trilha.');
+      return;
+    }
+    handleQuestaoPress(proxima);
+  };
+
+  // Lista final
+  const questoesFiltradas = useMemo(() => questoes, [questoes]);
 
   const styles = StyleSheet.create({
     container: {
@@ -258,6 +257,24 @@ const DesafiosScreen = () => {
       paddingHorizontal: 16,
       paddingTop: 20,
     },
+    filtersRow: {
+      marginBottom: 12,
+    },
+    chipsRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+      marginBottom: 8,
+    },
+    chip: {
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 16,
+      backgroundColor: '#F0F0F0',
+    },
+    chipActive: { backgroundColor: '#58CC02' },
+    chipText: { fontFamily: 'Outfit-Bold', color: '#1A1A1A' },
+    chipTextActive: { color: '#FFFFFF' },
     moduloInfo: {
       backgroundColor: '#FFFFFF',
       borderRadius: 12,
@@ -294,6 +311,12 @@ const DesafiosScreen = () => {
     },
     questoesList: {
       flex: 1,
+      gap: 10,
+    },
+    gridContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
     },
     emptyState: {
       flex: 1,
@@ -364,7 +387,7 @@ const DesafiosScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleVoltar}>
-          <AntDesign name="arrowleft" size={24} color="#FFFFFF" />
+          <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Desafios</Text>
@@ -383,10 +406,19 @@ const DesafiosScreen = () => {
           </View>
         )}
 
+        {/* Sem filtros nesta visão */}
+
+        {/* Ação rápida para seguir na próxima */}
+        <View style={{ marginBottom: 12 }}>
+          <TouchableOpacity style={[styles.historiaButton, { backgroundColor: '#4A90E2' }]} onPress={handleContinuarProxima}>
+            <Text style={styles.historiaButtonText}>Continuar próxima</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Lista de Questões */}
         <View style={styles.questoesSection}>
           <Text style={styles.questoesTitle}>
-            Questões ({questoes.length})
+            Questões ({questoesFiltradas.length})
           </Text>
           
           {!historiaConcluida ? (
@@ -407,15 +439,17 @@ const DesafiosScreen = () => {
                 </Text>
               </TouchableOpacity>
             </View>
-          ) : questoes.length > 0 ? (
-            <View style={styles.questoesList}>
-              {questoes.map((questao, index) => (
-                <QuestaoItem
-                  key={questao.id}
-                  questao={questao}
-                  onPress={handleQuestaoPress}
-                  isCompleted={questoesCompletadas.has(questao.id)}
-                />
+          ) : questoesFiltradas.length > 0 ? (
+            <View style={[styles.questoesList, styles.gridContainer]}>
+              {questoesFiltradas.map((questao, index) => (
+                <View key={questao.id} style={{ width: '48%' }}>
+                  <QuestaoItem
+                    questao={questao}
+                    index={index}
+                    onPress={handleQuestaoPress}
+                    isCompleted={questoesCompletadas.has(questao.id)}
+                  />
+                </View>
               ))}
             </View>
           ) : (
