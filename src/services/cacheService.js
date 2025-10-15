@@ -1,16 +1,54 @@
+/**
+ * ============================================
+ * SERVIÇO DE CACHE - cacheService.js
+ * ============================================
+ * 
+ * Sistema de cache em duas camadas para otimizar performance da aplicação FinGo.
+ * Implementa cache em memória (rápido) e cache persistente (AsyncStorage).
+ * 
+ * Funcionalidades:
+ * - Cache em memória para acesso instantâneo
+ * - Cache persistente para dados entre sessões
+ * - Invalidação automática por tempo
+ * - Pré-carregamento de dados essenciais
+ * - Cache específico por usuário
+ * 
+ * @author Equipe FinGo
+ * @version 1.0.0
+ */
+
 // Serviço de cache para otimizar carregamento
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+/**
+ * Duração padrão do cache em milissegundos (5 minutos)
+ */
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos em milissegundos
 
+/**
+ * Cache em memória para acesso instantâneo aos dados
+ * Mais rápido que AsyncStorage, mas perdido ao fechar o app
+ */
 // Cache em memória (mais rápido que AsyncStorage)
 const memoryCache = new Map();
 
+/**
+ * Gera chave única de cache baseada na chave e ID do usuário
+ * @param {string} key - Chave base do cache
+ * @param {string|null} userId - ID do usuário (opcional)
+ * @returns {string} Chave única de cache
+ */
 // Gerar chave de cache
 const getCacheKey = (key, userId = null) => {
   return userId ? `cache_${userId}_${key}` : `cache_${key}`;
 };
 
+/**
+ * Salva dados no cache (memória + AsyncStorage)
+ * @param {string} key - Chave do cache
+ * @param {any} data - Dados a serem salvos
+ * @param {string|null} userId - ID do usuário (opcional)
+ */
 // Salvar no cache (memória + AsyncStorage)
 export const setCache = async (key, data, userId = null) => {
   try {
@@ -30,6 +68,13 @@ export const setCache = async (key, data, userId = null) => {
   }
 };
 
+/**
+ * Busca dados do cache (memória primeiro, depois AsyncStorage)
+ * @param {string} key - Chave do cache
+ * @param {string|null} userId - ID do usuário (opcional)
+ * @param {number} maxAge - Idade máxima do cache em ms (opcional)
+ * @returns {any|null} Dados do cache ou null se não encontrado/expirado
+ */
 // Buscar do cache
 export const getCache = async (key, userId = null, maxAge = CACHE_DURATION) => {
   try {
@@ -66,6 +111,11 @@ export const getCache = async (key, userId = null, maxAge = CACHE_DURATION) => {
   }
 };
 
+/**
+ * Invalida cache específico (remove da memória e AsyncStorage)
+ * @param {string} key - Chave do cache a ser invalidada
+ * @param {string|null} userId - ID do usuário (opcional)
+ */
 // Invalidar cache específico
 export const invalidateCache = async (key, userId = null) => {
   try {
@@ -77,6 +127,10 @@ export const invalidateCache = async (key, userId = null) => {
   }
 };
 
+/**
+ * Limpa todo o cache (útil no logout)
+ * @param {string|null} userId - ID do usuário (opcional)
+ */
 // Limpar todo o cache (útil no logout)
 export const clearAllCache = async (userId = null) => {
   try {
@@ -103,6 +157,11 @@ export const clearAllCache = async (userId = null) => {
   }
 };
 
+/**
+ * Pré-carrega dados essenciais em background após login
+ * Melhora performance carregando dados importantes antecipadamente
+ * @param {string} userId - ID do usuário logado
+ */
 // Pré-carregar dados essenciais (rodar no login)
 export const preloadEssentialData = async (userId) => {
   try {

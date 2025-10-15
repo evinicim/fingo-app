@@ -1,14 +1,41 @@
+/**
+ * ============================================
+ * SERVIÇO DE PROGRESSO - progressService.js
+ * ============================================
+ * 
+ * Gerencia o progresso do usuário na aplicação FinGo.
+ * Implementa sincronização entre AsyncStorage local e Firestore.
+ * 
+ * Funcionalidades:
+ * - Controle de progresso de trilhas e questões
+ * - Sincronização com Firestore
+ * - Cálculo de estatísticas do usuário (XP, nível)
+ * - Sistema de desbloqueio progressivo de trilhas
+ * - Isolamento de progresso por usuário
+ * 
+ * @author Equipe FinGo
+ * @version 1.0.0
+ */
+
 // Serviço para gerenciar o progresso do usuário
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { auth, db } from './firebaseConfig';
 import { collection, doc, getDoc, setDoc, updateDoc, getDocs, query, where } from 'firebase/firestore';
 import { getTrilhas, getModulosByTrilha } from './contentService';
 
+/**
+ * Gera chave única de progresso baseada no usuário atual
+ * Garante isolamento de progresso entre diferentes usuários
+ * @returns {string} Chave única de progresso
+ */
 const getProgressKey = () => {
   const uid = auth.currentUser?.uid;
   return uid ? `user_progress_${uid}` : 'user_progress';
 };
 
+/**
+ * Estrutura padrão de progresso do usuário
+ */
 // Estrutura de progresso do usuário
 const defaultProgress = {
   historiasConcluidas: [],
@@ -17,6 +44,11 @@ const defaultProgress = {
   ultimaAtualizacao: new Date().toISOString()
 };
 
+/**
+ * Carrega progresso do usuário do AsyncStorage
+ * Inclui migração automática de IDs legados
+ * @returns {Object} Dados de progresso do usuário
+ */
 // Função para carregar progresso do usuário
 export const loadUserProgress = async () => {
   try {
@@ -39,6 +71,10 @@ export const loadUserProgress = async () => {
   }
 };
 
+/**
+ * Salva progresso do usuário no AsyncStorage e Firestore
+ * @param {Object} progress - Dados de progresso a serem salvos
+ */
 // Função para salvar progresso do usuário
 export const saveUserProgress = async (progress) => {
   try {

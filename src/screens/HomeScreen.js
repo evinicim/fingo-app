@@ -1,3 +1,25 @@
+/**
+ * ============================================
+ * TELA PRINCIPAL - HomeScreen.js
+ * ============================================
+ * 
+ * Tela principal da aplicação FinGo que exibe a jornada financeira do usuário.
+ * Implementa sistema de trilhas progressivas, progresso do usuário e desafios.
+ * 
+ * Funcionalidades:
+ * - Exibição de trilhas com sistema de desbloqueio progressivo
+ * - Cálculo e exibição de XP e progresso do usuário
+ * - Sistema de streak (sequência de dias)
+ * - Animações e conectores visuais entre trilhas
+ * - Pré-carregamento de dados para performance otimizada
+ * - Sistema de desafios/missões ativas
+ * 
+ * @author Equipe FinGo
+ * @version 1.0.0
+ */
+
+// CÓDIGO PARA O ARQUIVO: HomeScreen.js
+
 // CÓDIGO PARA O ARQUIVO: HomeScreen.js
 
 import React, { useState, useEffect } from 'react';
@@ -13,17 +35,36 @@ import { getDesafiosAtivos, getDesafiosDoUsuario } from '../services/desafiosSer
 import { buscarDadosPerfil } from '../services/userService';
 import { auth } from '../services/firebaseConfig';
 import TrilhaItem from '../components/TrilhaItem';
+
+/**
+ * Funções utilitárias para responsividade
+ * Calculam dimensões baseadas em porcentagem da tela
+ */
 // Funções de responsividade simples
+/**
+ * Calcula largura baseada em porcentagem da tela
+ * @param {number} percentage - Porcentagem da largura da tela
+ * @returns {number} Largura calculada em pixels
+ */
 const wp = (percentage) => {
   const { width } = Dimensions.get('window');
   return (percentage * width) / 100;
 };
 
+/**
+ * Calcula altura baseada em porcentagem da tela
+ * @param {number} percentage - Porcentagem da altura da tela
+ * @returns {number} Altura calculada em pixels
+ */
 const hp = (percentage) => {
   const { height } = Dimensions.get('window');
   return (percentage * height) / 100;
 };
 
+/**
+ * Componente para linha conectora em zigzag estilo Duolingo
+ * Cria uma linha animada conectando trilhas com gradiente e pontos decorativos
+ */
 // Componente para linha conectora em zigzag estilo Duolingo
 const ZigzagConnector = ({ isCompleted = false, index = 0, screenWidth, isLeftToRight = true }) => {
   const getPathData = (isLeftToRight) => {
@@ -77,6 +118,10 @@ const ZigzagConnector = ({ isCompleted = false, index = 0, screenWidth, isLeftTo
   );
 };
 
+/**
+ * Componente de Header com informações do usuário e streak
+ * Exibe saudação personalizada, streak de dias consecutivos e botões de teste
+ */
 // Componente de Header com Streak
 const HeaderWithStreak = ({ userName = "Jovem Financista", streak = 7, onReset, onSimulate }) => {
   const styles = StyleSheet.create({
@@ -156,6 +201,10 @@ const HeaderWithStreak = ({ userName = "Jovem Financista", streak = 7, onReset, 
   );
 };
 
+/**
+ * Componente principal da tela Home
+ * Gerencia estado das trilhas, progresso do usuário e navegação
+ */
 const HomeScreen = ({ navigation }) => {
   const navigationHook = useNavigation();
   const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -183,6 +232,10 @@ const HomeScreen = ({ navigation }) => {
     'Outfit-Bold': require('../assets/fonts/Outfit-Bold.ttf'),
   });
 
+  /**
+   * Hook useEffect para carregar dados iniciais da tela
+   * Carrega trilhas, status de desbloqueio, desafios e dados do usuário
+   */
   // Carregar status de desbloqueio das trilhas e dados do usuário
   useEffect(() => {
     const loadTrilhasStatus = async () => {
@@ -242,6 +295,10 @@ const HomeScreen = ({ navigation }) => {
     loadTrilhasStatus();
   }, []);
 
+  /**
+   * Hook useFocusEffect para recarregar dados quando a tela ganha foco
+   * Atualiza progresso e estatísticas do usuário
+   */
   // Recarregar status quando a tela ganha foco
   useFocusEffect(
     React.useCallback(() => {
@@ -275,6 +332,10 @@ const HomeScreen = ({ navigation }) => {
     }, [])
   );
 
+  /**
+   * Hook useEffect para animações de pulso nas trilhas disponíveis
+   * Aplica animação de escala nas trilhas que podem ser iniciadas
+   */
   // Animação de pulso para trilhas disponíveis
   useEffect(() => {
     const pulseAnimation = () => {
@@ -304,6 +365,11 @@ const HomeScreen = ({ navigation }) => {
     }
   }, [fontsLoaded, trilhas]);
 
+  /**
+   * Função para lidar com o toque em uma trilha
+   * Verifica se a trilha está desbloqueada e navega para a tela de história
+   * @param {Object} trilha - Objeto da trilha selecionada
+   */
   const handleTrilhaPress = (trilha) => {
     // Verificar se a trilha está desbloqueada
     const trilhaStatus = trilhasComStatus.find(t => t.id === trilha.id);
@@ -323,6 +389,10 @@ const HomeScreen = ({ navigation }) => {
     });
   };
 
+  /**
+   * Função para resetar o progresso do usuário
+   * Útil para testes e desenvolvimento
+   */
   const handleReset = async () => {
     try {
       await resetProgress();
@@ -334,6 +404,10 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
+  /**
+   * Função para simular conclusão da próxima trilha
+   * Marca automaticamente uma trilha como completa para testes
+   */
   const handleSimulate = async () => {
     try {
       // Simulação progressiva: encontra a primeira trilha com progresso < 100 e marca como concluída (história + questões)
@@ -383,6 +457,11 @@ const HomeScreen = ({ navigation }) => {
     );
   }
 
+  /**
+   * Função para renderizar trilhas em layout responsivo
+   * Ordena trilhas por ordem e aplica animações conforme status
+   * @returns {Array} Array de componentes TrilhaItem renderizados
+   */
   // Renderizar trilhas em layout responsivo
   const renderTrilhasResponsive = () => {
     const ordered = [...trilhas].sort((a, b) => (a?.ordem ?? 999) - (b?.ordem ?? 999));
@@ -490,6 +569,12 @@ const HomeScreen = ({ navigation }) => {
   );
 };
 
+/**
+ * Função para criar estilos responsivos baseados nas dimensões da tela
+ * @param {number} screenWidth - Largura da tela
+ * @param {number} screenHeight - Altura da tela
+ * @returns {Object} Objeto com estilos responsivos
+ */
 const createResponsiveStyles = (screenWidth, screenHeight) => {
   return StyleSheet.create({
     container: {
