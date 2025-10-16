@@ -456,7 +456,7 @@ const HomeScreen = ({ navigation }) => {
       </View>
     );
   }
-
+  
   /**
    * Função para renderizar trilhas em layout responsivo
    * Ordena trilhas por ordem e aplica animações conforme status
@@ -483,7 +483,7 @@ const HomeScreen = ({ navigation }) => {
             }
           ]}
         >
-          <TrilhaItem
+      <TrilhaItem
             trilha={trilhaComStatus}
             onPress={() => handleTrilhaPress(trilhaComStatus)}
           />
@@ -518,7 +518,7 @@ const HomeScreen = ({ navigation }) => {
         <View style={styles.progressSection}>
           <View style={styles.progressCard}>
             <View style={styles.progressHeader}>
-              <Text style={styles.progressTitle}>Seu Progresso</Text>
+            <Text style={styles.progressTitle}>Seu Progresso</Text>
               <View style={styles.xpContainer}>
                 <MaterialIcons name="star" size={20} color="#FFD700" />
                 <Text style={styles.xpText}>{userData.xp} XP</Text>

@@ -1,26 +1,71 @@
+/**
+ * ============================================
+ * COMPONENTE TRILHA ITEM - TrilhaItem.js
+ * ============================================
+ * 
+ * Componente responsável por exibir uma trilha individual na tela Home.
+ * Implementa estados visuais diferentes baseados no progresso da trilha.
+ * 
+ * Funcionalidades:
+ * - Estados visuais: disponível, em progresso, concluída, bloqueada
+ * - Animações de pulso para trilhas disponíveis
+ * - Animações de escala ao tocar
+ * - Indicadores de progresso e badges de conquista
+ * - Design responsivo para diferentes tamanhos de tela
+ * 
+ * @author Equipe FinGo
+ * @version 1.0.0
+ */
+
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+
+/**
+ * Funções utilitárias para responsividade
+ * Calculam dimensões baseadas em porcentagem da tela
+ */
 // Funções de responsividade personalizadas
+/**
+ * Calcula largura baseada em porcentagem da tela
+ * @param {number} percentage - Porcentagem da largura da tela
+ * @returns {number} Largura calculada em pixels
+ */
 const wp = (percentage) => {
   const { width } = Dimensions.get('window');
   return (percentage * width) / 100;
 };
 
+/**
+ * Calcula altura baseada em porcentagem da tela
+ * @param {number} percentage - Porcentagem da altura da tela
+ * @returns {number} Altura calculada em pixels
+ */
 const hp = (percentage) => {
   const { height } = Dimensions.get('window');
   return (percentage * height) / 100;
 };
 
+/**
+ * Componente principal TrilhaItem
+ * @param {Object} props - Propriedades do componente
+ * @param {Object} props.trilha - Dados da trilha (titulo, progresso, bloqueada)
+ * @param {Function} props.onPress - Função chamada ao pressionar a trilha
+ * @returns {JSX.Element} Componente TrilhaItem renderizado
+ */
 const TrilhaItem = ({ trilha, onPress }) => {
   const { width: screenWidth } = Dimensions.get('window');
   const isSmallScreen = screenWidth < 375;
   const isMediumScreen = screenWidth >= 375 && screenWidth < 414;
   
-  // Animações
+  // Animações para interação e feedback visual
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
   
+  /**
+   * Determina o estado atual da trilha baseado no progresso e bloqueio
+   * @returns {string} Estado da trilha: 'locked', 'completed', 'in_progress', 'available'
+   */
   const getTrilhaState = () => {
     if (trilha.bloqueada) return 'locked';
     if (trilha.progresso === 100) return 'completed';
