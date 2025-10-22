@@ -55,15 +55,63 @@ export async function getModuloById(moduloId) {
 
 // Questões
 export async function getQuestoesByModulo(moduloId) {
-  const q = query(collection(db, 'questao'), where('moduloId', '==', moduloId), orderBy('ordem'));
-  const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  try {
+    console.log('🔍 Buscando questões para módulo:', moduloId);
+    
+    // Tentar com orderBy primeiro
+    try {
+      const q = query(collection(db, 'questao'), where('moduloId', '==', moduloId), orderBy('ordem'));
+      const snap = await getDocs(q);
+      const questoes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      console.log('✅ Questões encontradas com orderBy:', questoes.length);
+      return questoes;
+    } catch (orderByError) {
+      console.warn('⚠️ Erro com orderBy, tentando sem ordenação:', orderByError.message);
+      
+      // Fallback sem orderBy
+      const q = query(collection(db, 'questao'), where('moduloId', '==', moduloId));
+      const snap = await getDocs(q);
+      const questoes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      
+      // Ordenar em memória
+      const ordenadas = questoes.sort((a, b) => (a.ordem ?? 999) - (b.ordem ?? 999));
+      console.log('✅ Questões encontradas sem orderBy:', ordenadas.length);
+      return ordenadas;
+    }
+  } catch (error) {
+    console.error('❌ Erro ao buscar questões:', error);
+    return [];
+  }
 }
 
 export async function getQuestoesByTrilha(trilhaId) {
-  const q = query(collection(db, 'questao'), where('trilhaId', '==', trilhaId), orderBy('ordem'));
-  const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  try {
+    console.log('🔍 Buscando questões para trilha:', trilhaId);
+    
+    // Tentar com orderBy primeiro
+    try {
+      const q = query(collection(db, 'questao'), where('trilhaId', '==', trilhaId), orderBy('ordem'));
+      const snap = await getDocs(q);
+      const questoes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      console.log('✅ Questões encontradas com orderBy:', questoes.length);
+      return questoes;
+    } catch (orderByError) {
+      console.warn('⚠️ Erro com orderBy, tentando sem ordenação:', orderByError.message);
+      
+      // Fallback sem orderBy
+      const q = query(collection(db, 'questao'), where('trilhaId', '==', trilhaId));
+      const snap = await getDocs(q);
+      const questoes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      
+      // Ordenar em memória
+      const ordenadas = questoes.sort((a, b) => (a.ordem ?? 999) - (b.ordem ?? 999));
+      console.log('✅ Questões encontradas sem orderBy:', ordenadas.length);
+      return ordenadas;
+    }
+  } catch (error) {
+    console.error('❌ Erro ao buscar questões:', error);
+    return [];
+  }
 }
 
 export async function getQuestoesCountByTrilha(trilhaId) {
