@@ -1,4 +1,95 @@
-// ... existing code ...
+import { collection, doc, getDoc, getDocs, query, where, orderBy } from 'firebase/firestore';
+import { db } from './firebaseConfig';
+import { getCache, setCache } from './cacheService';
+
+// Trilhas (com cache de 5 minutos)
+export async function getTrilhas() {
+  // Tentar buscar do cache primeiro
+  const cached = await getCache('trilhas');
+  if (cached) {
+    console.log('📦 Trilhas carregadas do cache');
+    return cached;
+  }
+  
+  // Se não tiver cache, buscar do Firestore
+  console.log('🔥 Buscando trilhas do Firestore...');
+  const snap = await getDocs(query(collection(db, 'trilhaId'), orderBy('ordem')));
+  const itens = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  // Filtra documentos válidos (ids do padrão trilha_*) e ordena de forma defensiva
+  const trilhas = itens
+    .filter(t => (t?.id || '').startsWith('trilha_'))
+    .sort((a, b) => (a?.ordem ?? 999) - (b?.ordem ?? 999));
+  
+  // Salvar no cache
+  await setCache('trilhas', trilhas);
+  
+  return trilhas;
+}
+
+export async function getTrilhaById(trilhaId) {
+  const ref = doc(db, 'trilhaId', trilhaId);
+  const snap = await getDoc(ref);
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+
+// Modulos
+export async function getModulosByTrilha(trilhaId) {
+  try {
+    const snap = await getDocs(query(collection(db, 'moduloId'), where('trilhaId', '==', trilhaId), orderBy('ordem')));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (e) {
+    // Fallback quando o Firestore exigir índice composto: tenta sem orderBy e ordena em memória
+    if (e?.code === 'failed-precondition' || String(e?.message || '').includes('requires an index')) {
+      const snap = await getDocs(query(collection(db, 'moduloId'), where('trilhaId', '==', trilhaId)));
+      return snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a?.ordem ?? 999) - (b?.ordem ?? 999));
+    }
+    throw e;
+  }
+}
+
+export async function getModuloById(moduloId) {
+  const ref = doc(db, 'moduloId', moduloId);
+  const snap = await getDoc(ref);
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+
+// Questões
+export async function getQuestoesByModulo(moduloId) {
+  const q = query(collection(db, 'questao'), where('moduloId', '==', moduloId), orderBy('ordem'));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+export async function getQuestoesByTrilha(trilhaId) {
+  const q = query(collection(db, 'questao'), where('trilhaId', '==', trilhaId), orderBy('ordem'));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+export async function getQuestoesCountByTrilha(trilhaId) {
+  const q = query(collection(db, 'questao'), where('trilhaId', '==', trilhaId));
+  const snap = await getDocs(q);
+  return snap.size;
+}
+
+export async function getQuestaoById(questaoId) {
+  const ref = doc(db, 'questao', questaoId);
+  const snap = await getDoc(ref);
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+
+// Histórias
+export async function getHistoriasByTrilha(trilhaId) {
+  const q = query(collection(db, 'historia'), where('trilhaId', '==', trilhaId), orderBy('ordem'));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+export async function getHistoriaById(historiaId) {
+  const ref = doc(db, 'historia', historiaId);
+  const snap = await getDoc(ref);
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
 
 /**
  * Buscar dados de FAQ do Firebase
