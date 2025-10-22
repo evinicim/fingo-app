@@ -1,7 +1,8 @@
 // Serviço de cache para otimizar carregamento
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos em milissegundos
+const CACHE_DURATION = 15 * 60 * 1000; // 15 minutos em milissegundos
+const PROGRESS_CACHE_DURATION = 2 * 60 * 1000; // 2 minutos para progresso (mais dinâmico)
 
 // Cache em memória (mais rápido que AsyncStorage)
 const memoryCache = new Map();
@@ -32,6 +33,8 @@ export const setCache = async (key, data, userId = null) => {
 
 // Buscar do cache
 export const getCache = async (key, userId = null, maxAge = CACHE_DURATION) => {
+  // Cache mais curto para dados de progresso
+  const actualMaxAge = key.includes('progress') ? PROGRESS_CACHE_DURATION : maxAge;
   try {
     const cacheKey = getCacheKey(key, userId);
     
@@ -52,7 +55,7 @@ export const getCache = async (key, userId = null, maxAge = CACHE_DURATION) => {
     
     // Verificar se o cache ainda é válido
     const age = Date.now() - cached.timestamp;
-    if (age > maxAge) {
+    if (age > actualMaxAge) {
       // Cache expirado
       memoryCache.delete(cacheKey);
       await AsyncStorage.removeItem(cacheKey);

@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { auth, db } from './firebaseConfig';
 import { collection, doc, getDoc, setDoc, updateDoc, getDocs, query, where } from 'firebase/firestore';
 import { getTrilhas, getModulosByTrilha } from './contentService';
+import { syncToFirebase, syncFromFirebase, checkSyncConflicts } from './syncService';
 
 const getProgressKey = () => {
   const uid = auth.currentUser?.uid;
@@ -20,6 +21,22 @@ const defaultProgress = {
 // Função para carregar progresso do usuário
 export const loadUserProgress = async () => {
   try {
+    // Verificar se há conflitos de sincronização
+    const conflicts = await checkSyncConflicts();
+    if (conflicts?.conflict) {
+      console.log('⚠️ Conflito de sincronização detectado, usando versão mais recente');
+      const newerData = conflicts[conflicts.newer];
+      await AsyncStorage.setItem(getProgressKey(), JSON.stringify(newerData));
+      return newerData;
+    }
+
+    // Tentar buscar do Firebase primeiro (fonte da verdade)
+    const firebaseProgress = await syncFromFirebase();
+    if (firebaseProgress) {
+      return firebaseProgress;
+    }
+
+    // Fallback para AsyncStorage
     const progressData = await AsyncStorage.getItem(getProgressKey());
     if (progressData) {
       const parsed = JSON.parse(progressData);
@@ -46,13 +63,16 @@ export const saveUserProgress = async (progress) => {
       ...progress,
       ultimaAtualizacao: new Date().toISOString()
     };
+    
+    // Salvar localmente primeiro (para performance)
     await AsyncStorage.setItem(getProgressKey(), JSON.stringify(progressToSave));
-    // Persistir no Firestore se logado
-    const uid = auth.currentUser?.uid;
-    if (uid) {
-      const ref = doc(db, 'users', uid);
-      await setDoc(ref, { progressoCache: progressToSave }, { merge: true });
+    
+    // Sincronizar com Firebase (fonte da verdade)
+    const syncSuccess = await syncToFirebase(progressToSave);
+    if (!syncSuccess) {
+      console.warn('⚠️ Falha na sincronização com Firebase, dados salvos localmente');
     }
+    
     return true;
   } catch (error) {
     console.error('Erro ao salvar progresso:', error);
