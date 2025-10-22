@@ -12,7 +12,7 @@ import { getTrilhas } from '../services/contentService';
 import { getDesafiosAtivos, getDesafiosDoUsuario } from '../services/desafiosService';
 import { buscarDadosPerfil } from '../services/userService';
 import { auth } from '../services/firebaseConfig';
-import { testSyncSimple, cleanupTestDataSimple } from '../services/testSyncSimple';
+// import { testSyncSimple, cleanupTestDataSimple } from '../services/testSyncSimple';
 import TrilhaItem from '../components/TrilhaItem';
 // Funções de responsividade simples
 const wp = (percentage) => {
@@ -379,41 +379,13 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
+  // Funções de teste temporariamente desabilitadas
   const handleTestSync = async () => {
-    try {
-      console.log('🧪 Iniciando teste de sincronização...');
-      const result = await testSyncSimple();
-      
-      if (result.success) {
-        Alert.alert(
-          'Teste de Sincronização', 
-          `✅ Testes concluídos com sucesso!\n\n` +
-          `👤 Usuário: ${result.user}\n` +
-          `📊 Histórias: ${result.progress.historiasConcluidas?.length || 0}\n` +
-          `📊 Questões: ${result.progress.questoesCompletadas?.length || 0}\n` +
-          `🔄 Firebase: ${result.syncResult ? 'OK' : 'Falhou'}\n` +
-          `💾 Salvamento: ${result.saveResult ? 'OK' : 'Falhou'}`
-        );
-      } else {
-        Alert.alert('Erro no Teste', `❌ ${result.error || result.message}`);
-      }
-    } catch (error) {
-      Alert.alert('Erro', 'Falha no teste de sincronização');
-      console.error('Erro no teste:', error);
-    }
+    Alert.alert('Info', 'Funcionalidade de teste temporariamente desabilitada');
   };
 
   const handleCleanupTest = async () => {
-    try {
-      const result = await cleanupTestDataSimple();
-      if (result) {
-        Alert.alert('Sucesso', 'Dados de teste removidos!');
-      } else {
-        Alert.alert('Info', 'Nenhum dado de teste encontrado');
-      }
-    } catch (error) {
-      Alert.alert('Erro', 'Falha ao limpar dados de teste');
-    }
+    Alert.alert('Info', 'Funcionalidade de teste temporariamente desabilitada');
   };
 
   const styles = createResponsiveStyles(screenWidth, screenHeight);

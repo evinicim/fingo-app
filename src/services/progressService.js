@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { auth, db } from './firebaseConfig';
 import { collection, doc, getDoc, setDoc, updateDoc, getDocs, query, where } from 'firebase/firestore';
 import { getTrilhas, getModulosByTrilha } from './contentService';
-import { syncToFirebase, syncFromFirebase, checkSyncConflicts } from './syncService';
+// import { syncToFirebase, syncFromFirebase, checkSyncConflicts } from './syncService';
 
 const getProgressKey = () => {
   const uid = auth.currentUser?.uid;
@@ -21,22 +21,7 @@ const defaultProgress = {
 // Função para carregar progresso do usuário
 export const loadUserProgress = async () => {
   try {
-    // Verificar se há conflitos de sincronização
-    const conflicts = await checkSyncConflicts();
-    if (conflicts?.conflict) {
-      console.log('⚠️ Conflito de sincronização detectado, usando versão mais recente');
-      const newerData = conflicts[conflicts.newer];
-      await AsyncStorage.setItem(getProgressKey(), JSON.stringify(newerData));
-      return newerData;
-    }
-
-    // Tentar buscar do Firebase primeiro (fonte da verdade)
-    const firebaseProgress = await syncFromFirebase();
-    if (firebaseProgress) {
-      return firebaseProgress;
-    }
-
-    // Fallback para AsyncStorage
+    // Carregar do AsyncStorage primeiro (mais rápido e confiável)
     const progressData = await AsyncStorage.getItem(getProgressKey());
     if (progressData) {
       const parsed = JSON.parse(progressData);
@@ -67,11 +52,16 @@ export const saveUserProgress = async (progress) => {
     // Salvar localmente primeiro (para performance)
     await AsyncStorage.setItem(getProgressKey(), JSON.stringify(progressToSave));
     
-    // Sincronizar com Firebase (fonte da verdade)
-    const syncSuccess = await syncToFirebase(progressToSave);
-    if (!syncSuccess) {
-      console.warn('⚠️ Falha na sincronização com Firebase, dados salvos localmente');
-    }
+    // Tentar sincronizar com Firebase (opcional, não bloqueia)
+    // TODO: Implementar sincronização quando syncService estiver estável
+    // try {
+    //   const syncSuccess = await syncToFirebase(progressToSave);
+    //   if (!syncSuccess) {
+    //     console.warn('⚠️ Falha na sincronização com Firebase, dados salvos localmente');
+    //   }
+    // } catch (syncError) {
+    //   console.warn('⚠️ Erro na sincronização Firebase:', syncError.message);
+    // }
     
     return true;
   } catch (error) {
