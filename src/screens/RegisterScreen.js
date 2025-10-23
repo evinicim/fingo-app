@@ -9,6 +9,7 @@ import {
   Platform,
   Dimensions,
   Alert,
+  TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ImputText from "../components/ImputText";
@@ -23,6 +24,7 @@ const RegisterScreen = ({ navigation }) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [nome, setNome] = useState("");
+  const [aceiteTermos, setAceiteTermos] = useState(false);
 
   const handleRegister = async () => {
     if (!nome.trim()) {
@@ -32,6 +34,11 @@ const RegisterScreen = ({ navigation }) => {
 
     if (password !== confirmPassword) {
       Alert.alert("Erro", "As senhas não coincidem.");
+      return;
+    }
+
+    if (!aceiteTermos) {
+      Alert.alert("Erro", "Você deve aceitar os Termos de Uso para continuar.");
       return;
     }
 
@@ -105,7 +112,33 @@ const RegisterScreen = ({ navigation }) => {
               onChangeText={setConfirmPassword}
             />
 
-            <PrimaryNavButton titulo="Cadastrar" onPress={handleRegister} />
+            {/* Checkbox para aceite dos termos */}
+            <View style={styles.termsContainer}>
+              <TouchableOpacity 
+                style={styles.checkboxContainer}
+                onPress={() => setAceiteTermos(!aceiteTermos)}
+              >
+                <View style={[styles.checkbox, aceiteTermos && styles.checkboxChecked]}>
+                  {aceiteTermos && <Text style={styles.checkmark}>✓</Text>}
+                </View>
+                <Text style={styles.termsText}>
+                  Eu aceito os{" "}
+                  <Text style={styles.termsLink} onPress={() => Alert.alert("Termos de Uso", "Termos de Uso do FinGo:\n\n1. Uso responsável do aplicativo\n2. Proteção de dados pessoais\n3. Conteúdo educacional de qualidade\n4. Suporte ao usuário\n\nAo continuar, você concorda com estes termos.")}>
+                    Termos de Uso
+                  </Text>
+                  {" "}e{" "}
+                  <Text style={styles.termsLink} onPress={() => Alert.alert("Política de Privacidade", "Política de Privacidade do FinGo:\n\n1. Seus dados são protegidos\n2. Não compartilhamos informações pessoais\n3. Dados usados apenas para melhorar o app\n4. Você pode excluir sua conta a qualquer momento")}>
+                    Política de Privacidade
+                  </Text>
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <PrimaryNavButton 
+              titulo="Cadastrar" 
+              onPress={handleRegister}
+              disabled={!aceiteTermos}
+            />
           </View>
 
           <View style={styles.loginLinkContainer}>
@@ -161,6 +194,44 @@ const styles = StyleSheet.create({
   },
   loginLinkContainer: {
     marginTop: 25,
+  },
+  termsContainer: {
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: '#666',
+    borderRadius: 4,
+    marginRight: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  checkboxChecked: {
+    backgroundColor: '#4CAF50',
+    borderColor: '#4CAF50',
+  },
+  checkmark: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  termsText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+  },
+  termsLink: {
+    color: '#4CAF50',
+    textDecorationLine: 'underline',
   },
 });
 

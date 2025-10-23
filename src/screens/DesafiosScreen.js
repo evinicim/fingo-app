@@ -213,7 +213,16 @@ const DesafiosScreen = () => {
   const handleContinuarProxima = () => {
     const proxima = questoes.find(q => !questoesCompletadas.has(q.id));
     if (!proxima) {
-      Alert.alert('Tudo certo!', 'Você concluiu todas as questões desta trilha.');
+      Alert.alert(
+        'Parabéns! 🎉', 
+        'Você concluiu todas as questões desta trilha!',
+        [
+          {
+            text: 'Voltar ao Início',
+            onPress: () => navigation.navigate('Main', { screen: 'Home' })
+          }
+        ]
+      );
       return;
     }
     handleQuestaoPress(proxima);

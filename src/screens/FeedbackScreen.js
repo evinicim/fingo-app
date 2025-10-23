@@ -401,7 +401,7 @@ const FeedbackScreen = () => {
               style={[styles.button, styles.continuarButton]}
               onPress={handleAvaliar}
             >
-              <Text style={styles.buttonText}>Avaliar e continuar</Text>
+              <Text style={styles.buttonText}>Continuar</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>

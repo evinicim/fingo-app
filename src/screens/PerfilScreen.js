@@ -152,7 +152,7 @@ const PerfilScreen = () => {
             </View>
             
             {/* Nome do Usuário */}
-            <Text style={styles.userName}>{userData?.nome || 'Usuário'}</Text>
+            <Text style={styles.userName}>{userData?.primeiroNome || userData?.nome || 'Usuário'}</Text>
             
             {/* Email */}
             <Text style={styles.userEmail}>{userData?.email || ''}</Text>
