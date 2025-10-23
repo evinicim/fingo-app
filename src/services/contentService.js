@@ -128,15 +128,90 @@ export async function getQuestaoById(questaoId) {
 
 // Histórias
 export async function getHistoriasByTrilha(trilhaId) {
-  const q = query(collection(db, 'historia'), where('trilhaId', '==', trilhaId), orderBy('ordem'));
-  const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  try {
+    console.log('🔍 Buscando histórias para trilha:', trilhaId);
+    
+    // Tentar com orderBy primeiro
+    try {
+      const q = query(collection(db, 'historias'), where('trilhaId', '==', trilhaId), orderBy('ordem'));
+      const snap = await getDocs(q);
+      const historias = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      console.log('✅ Histórias encontradas com orderBy:', historias.length);
+      return historias;
+    } catch (orderByError) {
+      console.warn('⚠️ Erro com orderBy, tentando sem ordenação:', orderByError.message);
+      
+      // Fallback sem orderBy
+      const q = query(collection(db, 'historias'), where('trilhaId', '==', trilhaId));
+      const snap = await getDocs(q);
+      const historias = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      
+      // Ordenar em memória
+      const ordenadas = historias.sort((a, b) => (a.ordem ?? 999) - (b.ordem ?? 999));
+      console.log('✅ Histórias encontradas sem orderBy:', ordenadas.length);
+      return ordenadas;
+    }
+  } catch (error) {
+    console.error('❌ Erro ao buscar histórias:', error);
+    return [];
+  }
+}
+
+export async function getHistoriaByTrilha(trilhaId) {
+  try {
+    console.log('🔍 Buscando história única para trilha:', trilhaId);
+    const historias = await getHistoriasByTrilha(trilhaId);
+    const primeiraHistoria = historias.length > 0 ? historias[0] : null;
+    console.log('✅ História encontrada:', primeiraHistoria ? primeiraHistoria.titulo : 'Nenhuma');
+    return primeiraHistoria;
+  } catch (error) {
+    console.error('❌ Erro ao buscar história da trilha:', error);
+    return null;
+  }
+}
+
+export async function getHistoriaByModulo(moduloId) {
+  try {
+    console.log('🔍 Buscando história para módulo:', moduloId);
+    
+    // Tentar com orderBy primeiro
+    try {
+      const q = query(collection(db, 'historias'), where('moduloId', '==', moduloId), orderBy('ordem'));
+      const snap = await getDocs(q);
+      const historias = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      console.log('✅ Histórias encontradas com orderBy:', historias.length);
+      return historias.length > 0 ? historias[0] : null;
+    } catch (orderByError) {
+      console.warn('⚠️ Erro com orderBy, tentando sem ordenação:', orderByError.message);
+      
+      // Fallback sem orderBy
+      const q = query(collection(db, 'historias'), where('moduloId', '==', moduloId));
+      const snap = await getDocs(q);
+      const historias = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      
+      // Ordenar em memória
+      const ordenadas = historias.sort((a, b) => (a.ordem ?? 999) - (b.ordem ?? 999));
+      console.log('✅ Histórias encontradas sem orderBy:', ordenadas.length);
+      return ordenadas.length > 0 ? ordenadas[0] : null;
+    }
+  } catch (error) {
+    console.error('❌ Erro ao buscar história do módulo:', error);
+    return null;
+  }
 }
 
 export async function getHistoriaById(historiaId) {
-  const ref = doc(db, 'historia', historiaId);
-  const snap = await getDoc(ref);
-  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+  try {
+    console.log('🔍 Buscando história por ID:', historiaId);
+    const ref = doc(db, 'historias', historiaId);
+    const snap = await getDoc(ref);
+    const historia = snap.exists() ? { id: snap.id, ...snap.data() } : null;
+    console.log('✅ História encontrada:', historia ? historia.titulo : 'Nenhuma');
+    return historia;
+  } catch (error) {
+    console.error('❌ Erro ao buscar história por ID:', error);
+    return null;
+  }
 }
 
 /**
