@@ -56,10 +56,10 @@ const TrilhaItem = ({ trilha, onPress }) => {
     switch (state) {
       case 'completed':
         return { 
-          bg: '#58CC02', 
-          border: '#46B302',
-          shadow: '#58CC02',
-          gradient: ['#58CC02', '#46B302']
+          bg: '#18AD77', 
+          border: '#128A5E',
+          shadow: '#18AD77',
+          gradient: ['#18AD77', '#128A5E']
         };
       case 'in_progress':
         return { 

@@ -162,7 +162,7 @@ const PerfilScreen = () => {
               style={styles.editButton}
               onPress={() => navigation.navigate('ProfileEdit')}
             >
-              <Feather name="edit-2" size={16} color="#4CAF50" />
+              <Feather name="edit-2" size={16} color="#18AD77" />
               <Text style={styles.editButtonText}>Editar Perfil</Text>
             </TouchableOpacity>
           </View>
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     backgroundColor: '#F0F9F0',
     borderWidth: 3,
-    borderColor: '#4CAF50',
+    borderColor: '#18AD77',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -292,12 +292,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F9F0',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#4CAF50',
+    borderColor: '#18AD77',
   },
   editButtonText: {
     fontSize: 14,
     fontFamily: 'Outfit-Medium',
-    color: '#4CAF50',
+    color: '#18AD77',
   },
   progressSection: {
     width: '100%',
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 24,
     fontFamily: 'Outfit-Bold',
-    color: '#4CAF50',
+    color: '#18AD77',
     marginBottom: 4,
   },
   statLabel: {

@@ -21,10 +21,10 @@ const hp = (percentage) => {
 const QuestaoItem = ({ questao, onPress, isCompleted = false, index }) => {
   const getDificuldadeColor = (dificuldade) => {
     switch (dificuldade) {
-      case 'facil': return '#58CC02';
+      case 'facil': return '#18AD77';
       case 'medio': return '#FFD700';
       case 'dificil': return '#FF6B6B';
-      default: return '#58CC02';
+      default: return '#18AD77';
     }
   };
 
@@ -97,7 +97,7 @@ const QuestaoItem = ({ questao, onPress, isCompleted = false, index }) => {
       width: 24,
       height: 24,
       borderRadius: 12,
-      backgroundColor: isCompleted ? '#58CC02' : '#E0E0E0',
+      backgroundColor: isCompleted ? '#18AD77' : '#E0E0E0',
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -237,7 +237,7 @@ const DesafiosScreen = () => {
       backgroundColor: '#F7F9FC',
     },
     header: {
-      backgroundColor: '#58CC02',
+      backgroundColor: '#18AD77',
       paddingHorizontal: 20,
       paddingVertical: 16,
       flexDirection: 'row',
@@ -281,7 +281,7 @@ const DesafiosScreen = () => {
       borderRadius: 16,
       backgroundColor: '#F0F0F0',
     },
-    chipActive: { backgroundColor: '#58CC02' },
+    chipActive: { backgroundColor: '#18AD77' },
     chipText: { fontFamily: 'Outfit-Bold', color: '#1A1A1A' },
     chipTextActive: { color: '#FFFFFF' },
     moduloInfo: {
@@ -368,7 +368,7 @@ const DesafiosScreen = () => {
       paddingHorizontal: 20,
     },
     historiaButton: {
-      backgroundColor: '#58CC02',
+      backgroundColor: '#18AD77',
       paddingHorizontal: 24,
       paddingVertical: 12,
       borderRadius: 8,

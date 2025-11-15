@@ -23,7 +23,7 @@ const hp = (percentage) => {
 const OpcaoResposta = ({ opcao, index, isSelected, isCorrect, isWrong, onPress, disabled }) => {
   const getOpcaoColor = () => {
     if (disabled) {
-      if (isCorrect) return '#58CC02';
+      if (isCorrect) return '#18AD77';
       if (isWrong) return '#FF6B6B';
       return '#E0E0E0';
     }
@@ -42,7 +42,7 @@ const OpcaoResposta = ({ opcao, index, isSelected, isCorrect, isWrong, onPress, 
 
   const getBorderColor = () => {
     if (disabled) {
-      if (isCorrect) return '#58CC02';
+      if (isCorrect) return '#18AD77';
       if (isWrong) return '#FF6B6B';
       return '#E0E0E0';
     }
@@ -114,7 +114,7 @@ const OpcaoResposta = ({ opcao, index, isSelected, isCorrect, isWrong, onPress, 
             <MaterialIcons
               name={isCorrect ? "check-circle" : "cancel"}
               size={20}
-              color={isCorrect ? "#58CC02" : "#FF6B6B"}
+              color={isCorrect ? "#18AD77" : "#FF6B6B"}
             />
           </View>
         )}
@@ -215,10 +215,10 @@ const QuestaoScreen = () => {
 
   const getDificuldadeColor = (dificuldade) => {
     switch (dificuldade) {
-      case 'facil': return '#58CC02';
+      case 'facil': return '#18AD77';
       case 'medio': return '#FFD700';
       case 'dificil': return '#FF6B6B';
-      default: return '#58CC02';
+      default: return '#18AD77';
     }
   };
 
@@ -237,7 +237,7 @@ const QuestaoScreen = () => {
       backgroundColor: '#F7F9FC',
     },
     header: {
-      backgroundColor: '#58CC02',
+      backgroundColor: '#18AD77',
       paddingHorizontal: 20,
       paddingVertical: 16,
       flexDirection: 'row',
@@ -312,7 +312,7 @@ const QuestaoScreen = () => {
       marginBottom: 24,
     },
     responderButton: {
-      backgroundColor: '#58CC02',
+      backgroundColor: '#18AD77',
       borderRadius: 12,
       paddingVertical: 16,
       alignItems: 'center',
@@ -337,13 +337,13 @@ const QuestaoScreen = () => {
       padding: 16,
       marginTop: 16,
       borderLeftWidth: 4,
-      borderLeftColor: respostaCorreta ? '#58CC02' : '#FF6B6B',
+      borderLeftColor: respostaCorreta ? '#18AD77' : '#FF6B6B',
     },
     resultadoTitle: {
       fontSize: 16,
       fontWeight: '700',
       fontFamily: 'Outfit-Bold',
-      color: respostaCorreta ? '#58CC02' : '#FF6B6B',
+      color: respostaCorreta ? '#18AD77' : '#FF6B6B',
       marginBottom: 8,
     },
     resultadoText: {
