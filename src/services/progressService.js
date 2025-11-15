@@ -410,7 +410,44 @@ export const debugTrilhasStatus = async () => {
 // Função para resetar progresso (para testes)
 export const resetProgress = async () => {
   try {
+    const PROGRESS_KEY = getProgressKey();
+    // Limpar do AsyncStorage
     await AsyncStorage.removeItem(PROGRESS_KEY);
+    
+    // Limpar do Firebase também
+    const uid = auth.currentUser?.uid;
+    if (uid) {
+      try {
+        const userRef = doc(db, 'users', uid);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists()) {
+          // Usar updateDoc se o documento existe
+          await updateDoc(userRef, {
+            progresso: {
+              historiasConcluidas: [],
+              questoesCompletadas: [],
+              ultimaAtualizacao: new Date().toISOString()
+            }
+          });
+          console.log('🔄 Progresso resetado do Firebase também!');
+        } else {
+          // Se não existir, criar com progresso vazio usando setDoc
+          await setDoc(userRef, {
+            progresso: {
+              historiasConcluidas: [],
+              questoesCompletadas: [],
+              ultimaAtualizacao: new Date().toISOString()
+            }
+          }, { merge: true });
+          console.log('🔄 Progresso inicial criado no Firebase (vazio)!');
+        }
+      } catch (firebaseError) {
+        console.warn('⚠️ Erro ao resetar do Firebase:', firebaseError);
+        // Não falhar o reset se o Firebase der erro
+      }
+    }
+    
     console.log('🔄 Progresso resetado com sucesso!');
     return true;
   } catch (error) {

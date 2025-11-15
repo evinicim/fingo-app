@@ -12,7 +12,7 @@ const SecondLink = ({ titulo, onPress }) => {
 const styles = StyleSheet.create({
   link: {
     fontSize: 14,
-    color: '#34C759', // A cor verde da marca
+    color: '#18AD77', // A cor verde da marca
     textDecorationLine: 'underline',
   },
 });

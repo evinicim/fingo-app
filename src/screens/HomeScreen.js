@@ -12,7 +12,7 @@ import { getTrilhas } from '../services/contentService';
 import { getDesafiosAtivos, getDesafiosDoUsuario } from '../services/desafiosService';
 import { buscarDadosPerfil } from '../services/userService';
 import { auth } from '../services/firebaseConfig';
-// import { testSyncSimple, cleanupTestDataSimple } from '../services/testSyncSimple';
+import { testSyncSimple, cleanupTestDataSimple } from '../services/testSyncSimple';
 import TrilhaItem from '../components/TrilhaItem';
 // Funções de responsividade simples
 const wp = (percentage) => {
@@ -36,7 +36,7 @@ const ZigzagConnector = ({ isCompleted = false, index = 0, screenWidth, isLeftTo
   };
 
   const pathData = getPathData(isLeftToRight);
-  const strokeColor = isCompleted ? '#58CC02' : '#FFD700';
+  const strokeColor = isCompleted ? '#18AD77' : '#FFD700';
 
   const styles = StyleSheet.create({
     connectorContainer: {
@@ -285,10 +285,6 @@ const HomeScreen = ({ navigation }) => {
   useEffect(() => {
     const loadTrilhasStatus = async () => {
       try {
-        // Marcar início do carregamento
-        const startTime = Date.now();
-        console.log('⏱️ Iniciando carregamento da Home...');
-        
         const trilhasData = await getTrilhas();
         setTrilhas(trilhasData);
         const status = await getTrilhasWithUnlockStatus();
@@ -321,10 +317,6 @@ const HomeScreen = ({ navigation }) => {
         }
 
         setLoading(false);
-        
-        // Medir tempo de carregamento
-        const loadTime = Date.now() - startTime;
-        console.log(`✅ Home carregada em ${loadTime}ms`);
       } catch (error) {
         console.error('Erro ao carregar status das trilhas:', error);
         setLoading(false);
@@ -388,12 +380,52 @@ const HomeScreen = ({ navigation }) => {
 
   const handleReset = async () => {
     try {
-      await resetProgress();
-      const status = await getTrilhasWithUnlockStatus();
-      setTrilhasComStatus(status);
-      Alert.alert('Sucesso', 'Progresso resetado!');
+      Alert.alert(
+        'Confirmar Reset',
+        'Tem certeza que deseja resetar todo o seu progresso? Esta ação não pode ser desfeita.',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Resetar',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                const result = await resetProgress();
+                if (result) {
+                  // Recarregar status das trilhas
+                  const status = await getTrilhasWithUnlockStatus();
+                  setTrilhasComStatus(status);
+                  
+                  // Recarregar dados do usuário
+                  const uid = auth.currentUser?.uid;
+                  if (uid) {
+                    const stats = await getUserStats();
+                    const perfilResult = await buscarDadosPerfil(uid);
+                    if (perfilResult.success) {
+                      setUserData(prev => ({
+                        ...prev,
+                        totalTrilhas: stats.totalTrilhas,
+                        trilhasConcluidas: stats.trilhasConcluidas,
+                        xp: stats.xp,
+                      }));
+                    }
+                  }
+                  
+                  Alert.alert('✅ Sucesso', 'Progresso resetado com sucesso!');
+                } else {
+                  Alert.alert('❌ Erro', 'Falha ao resetar progresso');
+                }
+              } catch (error) {
+                console.error('Erro no reset:', error);
+                Alert.alert('❌ Erro', `Falha ao resetar progresso: ${error.message}`);
+              }
+            },
+          },
+        ]
+      );
     } catch (error) {
-      Alert.alert('Erro', 'Falha ao resetar progresso');
+      console.error('Erro no handleReset:', error);
+      Alert.alert('❌ Erro', `Erro inesperado: ${error.message}`);
     }
   };
 
@@ -404,44 +436,148 @@ const HomeScreen = ({ navigation }) => {
       const status = await getTrilhasWithUnlockStatus();
       const aberto = ordered.find(t => (status.find(s => s.id === t.id)?.progresso || 0) < 100);
       if (!aberto) {
-        Alert.alert('Info', 'Todas as trilhas já estão completas.');
+        Alert.alert('ℹ️ Info', 'Todas as trilhas já estão completas.');
         return;
       }
+      
       // Reutiliza a função existente para T1 se for trilha_01, caso contrário completa via progresso local
+      let success = false;
       if (aberto.id === 'trilha_01') {
-        await simularTrilha1Completa();
+        success = await simularTrilha1Completa();
       } else {
         // Marca como completa no progresso local
         const { loadUserProgress, saveUserProgress, calculateTrilhaProgress } = await import('../services/progressService');
         const prog = await loadUserProgress();
-        if (!prog.historiasConcluidas.includes(aberto.id)) prog.historiasConcluidas.push(aberto.id);
+        if (!prog.historiasConcluidas.includes(aberto.id)) {
+          prog.historiasConcluidas.push(aberto.id);
+        }
         // Marca questões da trilha como completadas pelo padrão de ids (questao_trilha_X_...)
         const { getDocs, collection, query, where } = await import('firebase/firestore');
         const { db } = await import('../services/firebaseConfig');
         const qs = await getDocs(query(collection(db, 'questao'), where('trilhaId', '==', aberto.id)));
         qs.docs.forEach(d => {
           if (!prog.questoesCompletadas.some(q => q.id === d.id)) {
-            prog.questoesCompletadas.push({ id: d.id, pontuacao: 10, dataConclusao: new Date().toISOString() });
+            prog.questoesCompletadas.push({ 
+              id: d.id, 
+              trilhaId: aberto.id,
+              pontuacao: 10, 
+              correta: true,
+              respostaSelecionada: 1,
+              dataConclusao: new Date().toISOString() 
+            });
           }
         });
         await saveUserProgress(prog);
         await calculateTrilhaProgress(aberto.id);
+        success = true;
       }
-      const novo = await getTrilhasWithUnlockStatus();
-      setTrilhasComStatus(novo);
-      Alert.alert('Sucesso', `Simulada como completa: ${aberto.titulo}`);
+      
+      if (success) {
+        // Recarregar status das trilhas
+        const novo = await getTrilhasWithUnlockStatus();
+        setTrilhasComStatus(novo);
+        
+        // Recarregar dados do usuário
+        const uid = auth.currentUser?.uid;
+        if (uid) {
+          const stats = await getUserStats();
+          const perfilResult = await buscarDadosPerfil(uid);
+          if (perfilResult.success) {
+            setUserData(prev => ({
+              ...prev,
+              totalTrilhas: stats.totalTrilhas,
+              trilhasConcluidas: stats.trilhasConcluidas,
+              xp: stats.xp,
+            }));
+          }
+        }
+        
+        Alert.alert('✅ Sucesso', `Trilha simulada como completa: ${aberto.titulo}`);
+      } else {
+        Alert.alert('❌ Erro', 'Falha ao simular trilha');
+      }
     } catch (error) {
-      Alert.alert('Erro', 'Falha ao simular trilha');
+      console.error('Erro no handleSimulate:', error);
+      Alert.alert('❌ Erro', `Falha ao simular trilha: ${error.message}`);
     }
   };
 
-  // Funções de teste temporariamente desabilitadas
+  // Função de teste de sincronização
   const handleTestSync = async () => {
-    Alert.alert('Info', 'Funcionalidade de teste temporariamente desabilitada');
+    try {
+      const result = await testSyncSimple();
+      
+      if (result.success) {
+        // Recarregar dados após teste
+        const status = await getTrilhasWithUnlockStatus();
+        setTrilhasComStatus(status);
+        
+        const uid = auth.currentUser?.uid;
+        if (uid) {
+          const stats = await getUserStats();
+          setUserData(prev => ({
+            ...prev,
+            totalTrilhas: stats.totalTrilhas,
+            trilhasConcluidas: stats.trilhasConcluidas,
+            xp: stats.xp,
+          }));
+        }
+        
+        Alert.alert(
+          '✅ Teste Concluído',
+          `Teste de sincronização realizado com sucesso!\n\nUsuário: ${result.user}\nSincronização: ${result.syncResult ? 'OK' : 'Falhou'}\nSalvamento: ${result.saveResult ? 'OK' : 'Falhou'}`
+        );
+      } else {
+        Alert.alert('❌ Erro no Teste', result.message || result.error || 'Falha ao executar teste de sincronização');
+      }
+    } catch (error) {
+      console.error('Erro no handleTestSync:', error);
+      Alert.alert('❌ Erro', `Erro ao executar teste: ${error.message}`);
+    }
   };
 
+  // Função de limpeza de dados de teste
   const handleCleanupTest = async () => {
-    Alert.alert('Info', 'Funcionalidade de teste temporariamente desabilitada');
+    try {
+      Alert.alert(
+        '🧹 Limpar Dados de Teste',
+        'Deseja remover os dados de teste criados durante os testes de sincronização?',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Limpar',
+            style: 'destructive',
+            onPress: async () => {
+              const result = await cleanupTestDataSimple();
+              
+              if (result) {
+                // Recarregar dados após limpeza
+                const status = await getTrilhasWithUnlockStatus();
+                setTrilhasComStatus(status);
+                
+                const uid = auth.currentUser?.uid;
+                if (uid) {
+                  const stats = await getUserStats();
+                  setUserData(prev => ({
+                    ...prev,
+                    totalTrilhas: stats.totalTrilhas,
+                    trilhasConcluidas: stats.trilhasConcluidas,
+                    xp: stats.xp,
+                  }));
+                }
+                
+                Alert.alert('✅ Sucesso', 'Dados de teste removidos com sucesso!');
+              } else {
+                Alert.alert('ℹ️ Info', 'Nenhum dado de teste encontrado para remover.');
+              }
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      console.error('Erro no handleCleanupTest:', error);
+      Alert.alert('❌ Erro', `Erro ao limpar dados de teste: ${error.message}`);
+    }
   };
 
   const styles = createResponsiveStyles(screenWidth, screenHeight);
@@ -449,7 +585,7 @@ const HomeScreen = ({ navigation }) => {
   if (!fontsLoaded || loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#58CC02" />
+        <ActivityIndicator size="large" color="#18AD77" />
         <Text style={styles.loadingText}>Carregando sua jornada...</Text>
       </View>
     );
@@ -674,6 +810,7 @@ const createResponsiveStyles = (screenWidth, screenHeight) => {
       marginTop: 16,
       fontSize: 16,
       color: '#A7F3D0',
+      color: '#2BC896',
       fontFamily: 'Outfit-Regular',
     },
     contentContainer: {
@@ -692,6 +829,7 @@ const createResponsiveStyles = (screenWidth, screenHeight) => {
       paddingVertical: 18,
       borderWidth: 1,
       borderColor: 'rgba(99, 102, 241, 0.3)',
+      borderColor: 'rgba(24, 173, 119, 0.3)',
     },
     progressHeader: {
       flexDirection: 'row',
@@ -745,6 +883,7 @@ const createResponsiveStyles = (screenWidth, screenHeight) => {
     progressFill: {
       height: '100%',
       backgroundColor: '#34D399',
+      backgroundColor: '#18AD77',
       borderRadius: 10,
     },
     progressMetaRow: {
@@ -899,6 +1038,59 @@ const createResponsiveStyles = (screenWidth, screenHeight) => {
     missionCardDone: {
       borderColor: 'rgba(16, 185, 129, 0.5)',
       backgroundColor: 'rgba(6, 95, 70, 0.6)',
+      marginBottom: 20,
+      width: '100%',
+    },
+    missionIconBubble: {
+      width: 42,
+      height: 42,
+      borderRadius: 21,
+      backgroundColor: 'rgba(99, 102, 241, 0.4)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 12,
+    },
+    missionContent: {
+      flex: 1,
+    },
+    missionTitle: {
+      fontSize: 16,
+      fontFamily: 'Outfit-Bold',
+      color: '#F8FAFC',
+    },
+    connectorLine: {
+      width: 3,
+      height: 18,
+      backgroundColor: '#18AD77',
+      borderRadius: 2,
+      shadowColor: '#18AD77',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.6,
+      shadowRadius: 4,
+    },
+    connectorDot: {
+      width: 8,
+      height: 8,
+      backgroundColor: '#22D3EE',
+      borderRadius: 4,
+      marginTop: 4,
+      shadowColor: '#22D3EE',
+      shadowOpacity: 0.6,
+      shadowRadius: 4,
+    },
+    missionCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: 'rgba(15, 23, 42, 0.9)',
+      borderRadius: 18,
+      padding: 16,
+      marginBottom: 14,
+      borderWidth: 1,
+      borderColor: 'rgba(56, 189, 248, 0.3)',
+    },
+    missionCardDone: {
+      borderColor: 'rgba(16, 185, 129, 0.5)',
+      backgroundColor: 'rgba(6, 95, 70, 0.6)',
     },
     missionIconBubble: {
       width: 42,
@@ -933,6 +1125,7 @@ const createResponsiveStyles = (screenWidth, screenHeight) => {
     missionProgressFill: {
       height: '100%',
       backgroundColor: '#22D3EE',
+      backgroundColor: '#18AD77',
     },
     missionStatus: {
       paddingHorizontal: 12,

@@ -12,7 +12,7 @@ const wp = (p) => {
 };
 
 const QuestaoCard = ({ questao, isCompleted, onPress, index }) => {
-  const colorByDiff = (d) => (d === 'medio' ? '#FFD700' : d === 'dificil' ? '#FF6B6B' : '#58CC02');
+  const colorByDiff = (d) => (d === 'medio' ? '#FFD700' : d === 'dificil' ? '#FF6B6B' : '#18AD77');
   return (
     <TouchableOpacity style={[styles.card, { borderLeftColor: colorByDiff(questao.dificuldade) }]} onPress={() => onPress(questao)} activeOpacity={0.8}>
       <View style={styles.cardHeader}>
@@ -24,7 +24,7 @@ const QuestaoCard = ({ questao, isCompleted, onPress, index }) => {
       <Text style={styles.cardQuestion} numberOfLines={2}>{questao.pergunta}</Text>
       <View style={styles.cardFooter}>
         <Text style={styles.footerText}>{questao.opcoes.length} opções</Text>
-        <MaterialIcons name={isCompleted ? 'check-circle' : 'play-circle-outline'} size={18} color={isCompleted ? '#58CC02' : '#999'} />
+        <MaterialIcons name={isCompleted ? 'check-circle' : 'play-circle-outline'} size={18} color={isCompleted ? '#18AD77' : '#999'} />
       </View>
     </TouchableOpacity>
   );
@@ -194,12 +194,12 @@ const DesafiosHubScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex:1, backgroundColor:'#F7F9FC' },
-  header: { backgroundColor:'#58CC02', paddingHorizontal:20, paddingVertical:16 },
+  header: { backgroundColor:'#18AD77', paddingHorizontal:20, paddingVertical:16 },
   headerTitle: { color:'#FFF', fontFamily:'Outfit-Bold', fontSize:18 },
   content: { flex:1, paddingHorizontal:16, paddingTop:16 },
   chipsRow: { flexDirection:'row', flexWrap:'wrap', gap:8 },
   chip: { paddingHorizontal:12, paddingVertical:6, borderRadius:16, backgroundColor:'#F0F0F0' },
-  chipActive: { backgroundColor:'#58CC02' },
+  chipActive: { backgroundColor:'#18AD77' },
   chipText: { fontFamily:'Outfit-Bold', color:'#1A1A1A' },
   chipTextActive: { color:'#FFF' },
   ctaButton: { backgroundColor:'#4A90E2', paddingVertical:12, borderRadius:8, alignItems:'center' },

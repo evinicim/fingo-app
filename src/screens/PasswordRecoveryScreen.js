@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     width: '30%',
     height: 48,
     borderRadius: 12,
-    backgroundColor: '#17D689',
+    backgroundColor: '#18AD77',
     marginTop: 20,
   },
   sendButtonText: {

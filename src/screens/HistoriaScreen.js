@@ -25,7 +25,7 @@ const VideoPlayer = ({ progress = 0, onPlayPress }) => {
     videoContainer: {
       width: '100%',
       height: 200,
-      backgroundColor: isCompleted ? '#58CC02' : '#2C2C2C',
+      backgroundColor: isCompleted ? '#18AD77' : '#2C2C2C',
       borderRadius: 16,
       marginBottom: 20,
       justifyContent: 'center',
@@ -37,7 +37,7 @@ const VideoPlayer = ({ progress = 0, onPlayPress }) => {
       width: 60,
       height: 60,
       borderRadius: 30,
-      backgroundColor: isCompleted ? '#FFFFFF' : '#58CC02',
+      backgroundColor: isCompleted ? '#FFFFFF' : '#18AD77',
       justifyContent: 'center',
       alignItems: 'center',
       shadowColor: '#000',
@@ -56,7 +56,7 @@ const VideoPlayer = ({ progress = 0, onPlayPress }) => {
     },
     progressFill: {
       height: '100%',
-      backgroundColor: '#58CC02',
+      backgroundColor: '#18AD77',
       width: `${progress}%`,
     },
     progressText: {
@@ -142,7 +142,7 @@ const Mascot = ({ isVisible = true }) => {
       width: 80,
       height: 80,
       borderRadius: 40,
-      backgroundColor: '#58CC02',
+      backgroundColor: '#18AD77',
       justifyContent: 'center',
       alignItems: 'center',
       shadowColor: '#000',
@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
       backgroundColor: '#F7F9FC',
     },
     header: {
-      backgroundColor: '#58CC02',
+      backgroundColor: '#18AD77',
       paddingHorizontal: 20,
       paddingVertical: 16,
       flexDirection: 'row',
@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
       flex: 1,
       fontSize: 16,
       fontFamily: 'Outfit-Bold',
-      color: historiaConcluida ? '#58CC02' : '#FF9800',
+      color: historiaConcluida ? '#18AD77' : '#FF9800',
     },
     buttonsContainer: {
       flexDirection: 'row',
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
       marginHorizontal: 8,
     },
     concluirButton: {
-      backgroundColor: '#58CC02',
+      backgroundColor: '#18AD77',
     },
     desafiosButton: {
       backgroundColor: '#4A90E2',
@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
     },
     progressFill: {
       height: '100%',
-      backgroundColor: '#58CC02',
+      backgroundColor: '#18AD77',
       borderRadius: 4,
       width: '0%', // Será atualizado dinamicamente
     },
@@ -557,7 +557,7 @@ const styles = StyleSheet.create({
               <MaterialIcons
                 name={historiaConcluida ? "check-circle" : "schedule"}
                 size={24}
-                color={historiaConcluida ? "#58CC02" : "#FF9800"}
+                color={historiaConcluida ? "#18AD77" : "#FF9800"}
               />
             </View>
             <Text style={styles.statusText}>

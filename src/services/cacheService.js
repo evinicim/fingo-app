@@ -109,7 +109,6 @@ export const clearAllCache = async (userId = null) => {
 // Pré-carregar dados essenciais (rodar no login)
 export const preloadEssentialData = async (userId) => {
   try {
-    console.log('🚀 Pré-carregando dados essenciais...');
     // Importar services aqui para evitar dependência circular
     const { getTrilhas } = require('./contentService');
     const { buscarDadosPerfil } = require('./userService');
@@ -129,7 +128,6 @@ export const preloadEssentialData = async (userId) => {
       setCache('stats', stats, userId),
     ]);
     
-    console.log('✅ Dados essenciais pré-carregados!');
     return true;
   } catch (error) {
     console.error('Erro ao pré-carregar dados:', error);

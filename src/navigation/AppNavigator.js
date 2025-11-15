@@ -56,6 +56,7 @@ function MainTabNavigator() {
         tabBarItemStyle: {
           paddingVertical: 4,
         },
+        tabBarActiveTintColor: '#18AD77',
         headerShown: false,
       }}
     >

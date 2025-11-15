@@ -77,6 +77,11 @@ const TrilhaItem = ({ trilha, onPress, layoutSide = 'center', highlightPulse = f
           border: '#0EA649',
           shadow: '#34D399',
           text: '#E8FFF5',
+        return { 
+          bg: '#18AD77', 
+          border: '#128A5E',
+          shadow: '#18AD77',
+          gradient: ['#18AD77', '#128A5E']
         };
       case 'in_progress':
         return {
