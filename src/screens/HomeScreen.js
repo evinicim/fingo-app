@@ -1,7 +1,7 @@
 // CÓDIGO PARA O ARQUIVO: HomeScreen.js
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, Dimensions, Animated, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, Dimensions, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -74,6 +74,27 @@ const ZigzagConnector = ({ isCompleted = false, index = 0, screenWidth, isLeftTo
         <Circle cx="300" cy="70" r="2.5" fill="#4A90E2" opacity="0.6" />
         <Circle cx="150" cy="90" r="2" fill="#4A90E2" opacity="0.4" />
       </Svg>
+    </View>
+  );
+};
+
+// Conector vertical estilizado entre os nós da trilha
+const TrailConnectorSegment = ({ variant = 'pending', styleSet }) => {
+  const palette = {
+    ready: { line: '#F59E0B', dot: '#FBBF24', glow: 'rgba(251, 191, 36, 0.35)' },
+    active: { line: '#38BDF8', dot: '#0EA5E9', glow: 'rgba(56, 189, 248, 0.3)' },
+    done: { line: '#22C55E', dot: '#16A34A', glow: 'rgba(34, 197, 94, 0.35)' },
+    locked: { line: '#475569', dot: '#94A3B8', glow: 'rgba(148, 163, 184, 0.25)' },
+    pending: { line: '#334155', dot: '#64748B', glow: 'rgba(100, 116, 139, 0.25)' },
+  };
+
+  const colors = palette[variant] || palette.pending;
+
+  return (
+    <View style={styleSet.trailConnectorWrapper}>
+      <View style={[styleSet.trailConnectorLine, { backgroundColor: colors.line }]} />
+      <View style={[styleSet.trailConnectorGlow, { shadowColor: colors.line, backgroundColor: colors.glow }]} />
+      <View style={[styleSet.trailConnectorDot, { backgroundColor: colors.dot, shadowColor: colors.dot }]} />
     </View>
   );
 };
@@ -239,7 +260,6 @@ const HomeScreen = ({ navigation }) => {
   const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
   
   // Estados para animações
-  const [pulseAnimations] = useState([]);
   const [trilhas, setTrilhas] = useState([]);
   
   // Estados para trilhas com status de desbloqueio
@@ -267,12 +287,6 @@ const HomeScreen = ({ navigation }) => {
       try {
         const trilhasData = await getTrilhas();
         setTrilhas(trilhasData);
-        // inicializa animações conforme número de trilhas
-        if (trilhasData?.length) {
-          const anims = trilhasData.map(() => new Animated.Value(1));
-          pulseAnimations.splice(0, pulseAnimations.length, ...anims);
-        }
-
         const status = await getTrilhasWithUnlockStatus();
         // Reordena por ordem para evitar "fora de ordem" na UI
         status.sort((a, b) => (trilhasData.find(t => t.id === a.id)?.ordem ?? 999) - (trilhasData.find(t => t.id === b.id)?.ordem ?? 999));
@@ -344,35 +358,6 @@ const HomeScreen = ({ navigation }) => {
       reloadStatus();
     }, [])
   );
-
-  // Animação de pulso para trilhas disponíveis
-  useEffect(() => {
-    const pulseAnimation = () => {
-      const ordered = [...trilhas].sort((a, b) => (a?.ordem ?? 999) - (b?.ordem ?? 999));
-      ordered.forEach((trilha, index) => {
-        if (!trilha.bloqueada && trilha.progresso === 0) {
-          Animated.loop(
-            Animated.sequence([
-              Animated.timing(pulseAnimations[index], {
-                toValue: 1.1,
-                duration: 1000,
-                useNativeDriver: true,
-              }),
-              Animated.timing(pulseAnimations[index], {
-                toValue: 1,
-                duration: 1000,
-                useNativeDriver: true,
-              }),
-            ])
-          ).start();
-        }
-      });
-    };
-
-    if (fontsLoaded) {
-      pulseAnimation();
-    }
-  }, [fontsLoaded, trilhas]);
 
   const handleTrilhaPress = (trilha) => {
     // Verificar se a trilha está desbloqueada
@@ -606,40 +591,41 @@ const HomeScreen = ({ navigation }) => {
     );
   }
 
-  // Renderizar trilhas em layout responsivo
+  // Renderizar trilhas em layout responsivo no formato de jornada
   const renderTrilhasResponsive = () => {
     const ordered = [...trilhas].sort((a, b) => (a?.ordem ?? 999) - (b?.ordem ?? 999));
+
     return ordered.map((trilha, index) => {
       const trilhaStatus = trilhasComStatus.find(t => t.id === trilha.id);
+      const progresso = trilhaStatus?.progresso || 0;
+      const desbloqueada = !!trilhaStatus?.desbloqueada;
       const trilhaComStatus = {
         ...trilha,
-        bloqueada: !trilhaStatus?.desbloqueada,
-        progresso: trilhaStatus?.progresso || 0
+        bloqueada: !desbloqueada,
+        progresso,
       };
-      
+
+      const isReady = desbloqueada && progresso === 0;
+      const isActive = desbloqueada && progresso > 0 && progresso < 100;
+      const isComplete = progresso === 100;
+      const connectorVariant = isComplete ? 'done' : isActive ? 'active' : isReady ? 'ready' : 'locked';
+      const side = index % 2 === 0 ? 'left' : 'right';
+
       return (
-        <Animated.View
-          key={trilha.id}
-          style={[
-            styles.trilhaItemContainer,
-            !trilhaComStatus.bloqueada && trilhaComStatus.progresso === 0 && {
-              transform: [{ scale: pulseAnimations[index] }]
-            }
-          ]}
-        >
-          <TrilhaItem
-            trilha={trilhaComStatus}
-            onPress={() => handleTrilhaPress(trilhaComStatus)}
-          />
-        
-          {/* Conector simples para próxima trilha */}
-          {index < trilhas.length - 1 && (
-            <View style={styles.simpleConnector}>
-              <View style={styles.connectorLine} />
-              <View style={styles.connectorDot} />
-            </View>
-          )}
-        </Animated.View>
+        <View key={trilha.id} style={styles.journeyRow}>
+          <View style={styles.journeyColumn}>
+            {index !== 0 && <TrailConnectorSegment variant={connectorVariant} styleSet={styles} />}
+
+            <TrilhaItem
+              trilha={trilhaComStatus}
+              onPress={() => handleTrilhaPress(trilhaComStatus)}
+              layoutSide={side}
+              highlightPulse={isReady}
+            />
+
+            {index < ordered.length - 1 && <TrailConnectorSegment variant={connectorVariant} styleSet={styles} />}
+          </View>
+        </View>
       );
     });
   };
@@ -823,6 +809,7 @@ const createResponsiveStyles = (screenWidth, screenHeight) => {
     loadingText: {
       marginTop: 16,
       fontSize: 16,
+      color: '#A7F3D0',
       color: '#2BC896',
       fontFamily: 'Outfit-Regular',
     },
@@ -841,6 +828,7 @@ const createResponsiveStyles = (screenWidth, screenHeight) => {
       paddingHorizontal: 20,
       paddingVertical: 18,
       borderWidth: 1,
+      borderColor: 'rgba(99, 102, 241, 0.3)',
       borderColor: 'rgba(24, 173, 119, 0.3)',
     },
     progressHeader: {
@@ -894,6 +882,7 @@ const createResponsiveStyles = (screenWidth, screenHeight) => {
     },
     progressFill: {
       height: '100%',
+      backgroundColor: '#34D399',
       backgroundColor: '#18AD77',
       borderRadius: 10,
     },
@@ -980,17 +969,94 @@ const createResponsiveStyles = (screenWidth, screenHeight) => {
       textAlign: 'left',
     },
     trilhasContainer: {
-      alignItems: 'center',
       paddingVertical: 10,
     },
-    trilhaItemContainer: {
+    journeyRow: {
       alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 14,
+    },
+    journeyColumn: {
+      alignItems: 'center',
+      backgroundColor: 'rgba(15, 23, 42, 0.7)',
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: 'rgba(56, 189, 248, 0.25)',
+      paddingVertical: 12,
+      paddingHorizontal: 18,
+      width: '92%',
+      shadowColor: '#0EA5E9',
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.12,
+      shadowRadius: 12,
+      elevation: 5,
+    },
+    trailConnectorWrapper: {
+      width: 36,
+      height: 74,
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'relative',
+    },
+    trailConnectorLine: {
+      position: 'absolute',
+      width: 4,
+      height: 64,
+      borderRadius: 10,
+      opacity: 0.9,
+    },
+    trailConnectorGlow: {
+      position: 'absolute',
+      width: 30,
+      height: 64,
+      borderRadius: 14,
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.7,
+      shadowRadius: 12,
+      opacity: 0.6,
+    },
+    trailConnectorDot: {
+      position: 'absolute',
+      bottom: 2,
+      width: 12,
+      height: 12,
+      borderRadius: 6,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.8,
+      shadowRadius: 4,
+    },
+    missionCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: 'rgba(15, 23, 42, 0.9)',
+      borderRadius: 18,
+      padding: 16,
+      marginBottom: 14,
+      borderWidth: 1,
+      borderColor: 'rgba(56, 189, 248, 0.3)',
+    },
+    missionCardDone: {
+      borderColor: 'rgba(16, 185, 129, 0.5)',
+      backgroundColor: 'rgba(6, 95, 70, 0.6)',
       marginBottom: 20,
       width: '100%',
     },
-    simpleConnector: {
+    missionIconBubble: {
+      width: 42,
+      height: 42,
+      borderRadius: 21,
+      backgroundColor: 'rgba(99, 102, 241, 0.4)',
+      justifyContent: 'center',
       alignItems: 'center',
-      marginVertical: 5,
+      marginRight: 12,
+    },
+    missionContent: {
+      flex: 1,
+    },
+    missionTitle: {
+      fontSize: 16,
+      fontFamily: 'Outfit-Bold',
+      color: '#F8FAFC',
     },
     connectorLine: {
       width: 3,
@@ -1058,6 +1124,7 @@ const createResponsiveStyles = (screenWidth, screenHeight) => {
     },
     missionProgressFill: {
       height: '100%',
+      backgroundColor: '#22D3EE',
       backgroundColor: '#18AD77',
     },
     missionStatus: {

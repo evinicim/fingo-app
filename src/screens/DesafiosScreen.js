@@ -21,6 +21,9 @@ const hp = (percentage) => {
 const QuestaoItem = ({ questao, onPress, isCompleted = false, index }) => {
   const palette = {
     facil: {
+      primary: '#34D399',
+      badge: 'rgba(52, 211, 153, 0.2)',
+      border: 'rgba(52, 211, 153, 0.5)'
       primary: '#18AD77',
       badge: 'rgba(24, 173, 119, 0.2)',
       border: 'rgba(24, 173, 119, 0.5)'
@@ -36,6 +39,9 @@ const QuestaoItem = ({ questao, onPress, isCompleted = false, index }) => {
       border: 'rgba(244, 114, 182, 0.45)'
     }
   }[questao.dificuldade] || {
+    primary: '#34D399',
+    badge: 'rgba(52, 211, 153, 0.2)',
+    border: 'rgba(52, 211, 153, 0.5)'
     primary: '#18AD77',
     badge: 'rgba(24, 173, 119, 0.2)',
     border: 'rgba(24, 173, 119, 0.5)'
@@ -108,16 +114,19 @@ const QuestaoItem = ({ questao, onPress, isCompleted = false, index }) => {
     statusIcon: {
       flexDirection: 'row',
       alignItems: 'center',
+      backgroundColor: isCompleted ? 'rgba(16, 185, 129, 0.2)' : 'rgba(148, 163, 184, 0.2)',
       backgroundColor: isCompleted ? 'rgba(24, 173, 119, 0.2)' : 'rgba(148, 163, 184, 0.2)',
       borderRadius: 14,
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderWidth: 1,
+      borderColor: isCompleted ? 'rgba(16, 185, 129, 0.5)' : 'rgba(148, 163, 184, 0.4)'
       borderColor: isCompleted ? 'rgba(24, 173, 119, 0.5)' : 'rgba(148, 163, 184, 0.4)'
     },
     statusText: {
       fontSize: 12,
       fontFamily: 'Outfit-Bold',
+      color: isCompleted ? '#6EE7B7' : '#CBD5F5',
       color: isCompleted ? '#2BC896' : '#CBD5F5',
       marginLeft: 4,
     }
@@ -148,6 +157,7 @@ const QuestaoItem = ({ questao, onPress, isCompleted = false, index }) => {
           <MaterialIcons
             name={isCompleted ? "check-circle" : "play-arrow"}
             size={14}
+            color={isCompleted ? '#6EE7B7' : '#E2E8F0'}
             color={isCompleted ? '#2BC896' : '#E2E8F0'}
           />
           <Text style={styles.statusText}>{isCompleted ? 'Concluída' : 'Estudar'}</Text>
@@ -266,6 +276,7 @@ const DesafiosScreen = () => {
       borderBottomLeftRadius: 24,
       borderBottomRightRadius: 24,
       borderBottomWidth: 1,
+      borderColor: 'rgba(99, 102, 241, 0.3)'
       borderColor: 'rgba(24, 173, 119, 0.3)'
     },
     backButton: {
@@ -389,6 +400,7 @@ const DesafiosScreen = () => {
       paddingHorizontal: 20,
     },
     historiaButton: {
+      backgroundColor: '#22D3EE',
       backgroundColor: '#18AD77',
       paddingHorizontal: 24,
       paddingVertical: 12,
