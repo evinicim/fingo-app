@@ -79,70 +79,141 @@ const ZigzagConnector = ({ isCompleted = false, index = 0, screenWidth, isLeftTo
 };
 
 // Componente de Header com Streak
-const HeaderWithStreak = ({ userName = "Jovem Financista", streak = 7, onReset, onSimulate, onTestSync, onCleanupTest }) => {
+const HeaderWithStreak = ({ userName = "Jovem Financista", streak = 7, xp = 0, trilhasConcluidas = 0, totalTrilhas = 0, onReset, onSimulate, onTestSync, onCleanupTest }) => {
   const styles = StyleSheet.create({
     headerContainer: {
-      backgroundColor: '#18AD77',
+      backgroundColor: '#101B38',
+      borderBottomLeftRadius: 28,
+      borderBottomRightRadius: 28,
       paddingHorizontal: 20,
-      paddingVertical: 15,
-      borderBottomLeftRadius: 20,
-      borderBottomRightRadius: 20,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      elevation: 5,
+      paddingTop: 10,
+      paddingBottom: 24,
+      overflow: 'hidden',
+    },
+    aurora: {
+      ...StyleSheet.absoluteFillObject,
     },
     headerContent: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
+      marginBottom: 16,
     },
-    testButtons: {
-      flexDirection: 'row',
-      gap: 8,
-    },
-    testButton: {
-      backgroundColor: 'rgba(255, 255, 255, 0.2)',
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 12,
-    },
-    testButtonText: {
-      color: '#FFFFFF',
-      fontSize: 12,
-      fontWeight: '600',
+    headerTextBlock: {
+      flex: 1,
     },
     welcomeText: {
-      fontSize: 18,
-      fontWeight: '600',
+      fontSize: 16,
+      color: '#94A3B8',
+      fontFamily: 'Outfit-Regular',
+    },
+    userName: {
+      fontSize: 24,
       color: '#FFFFFF',
       fontFamily: 'Outfit-Bold',
+      marginTop: 2,
     },
     streakContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: 'rgba(255, 255, 255, 0.2)',
-      paddingHorizontal: 12,
-      paddingVertical: 6,
+      backgroundColor: 'rgba(15, 118, 110, 0.35)',
       borderRadius: 20,
+      paddingHorizontal: 14,
+      paddingVertical: 6,
+      borderWidth: 1,
+      borderColor: 'rgba(45, 212, 191, 0.4)',
     },
     streakText: {
-      fontSize: 14,
-      fontWeight: '600',
+      fontSize: 16,
+      fontFamily: 'Outfit-Bold',
+      color: '#5DF1CE',
+      marginLeft: 6,
+    },
+    quickStats: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: 10,
+    },
+    quickStat: {
+      backgroundColor: 'rgba(15, 23, 42, 0.7)',
+      borderRadius: 16,
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      flex: 1,
+      marginRight: 10,
+      borderWidth: 1,
+      borderColor: 'rgba(148, 163, 184, 0.2)',
+    },
+    quickStatLast: {
+      marginRight: 0,
+    },
+    statLabel: {
+      fontSize: 12,
+      color: '#94A3B8',
+      fontFamily: 'Outfit-Regular',
+    },
+    statValue: {
+      fontSize: 18,
       color: '#FFFFFF',
       fontFamily: 'Outfit-Bold',
-      marginLeft: 5,
+      marginTop: 4,
+    },
+    testButtons: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      marginTop: 16,
+    },
+    testButton: {
+      backgroundColor: 'rgba(148, 163, 184, 0.15)',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: 'rgba(148, 163, 184, 0.4)',
+      marginRight: 8,
+      marginBottom: 8,
+    },
+    testButtonText: {
+      color: '#E2E8F0',
+      fontSize: 12,
+      fontFamily: 'Outfit-Bold',
     },
   });
 
   return (
     <View style={styles.headerContainer}>
+      <Svg style={styles.aurora} height="140" width="100%">
+        <Defs>
+          <LinearGradient id="aurora" x1="0%" y1="0%" x2="100%" y2="0%">
+            <Stop offset="0%" stopColor="#0EA5E9" stopOpacity="0.5" />
+            <Stop offset="50%" stopColor="#34D399" stopOpacity="0.3" />
+            <Stop offset="100%" stopColor="#A855F7" stopOpacity="0.4" />
+          </LinearGradient>
+        </Defs>
+        <Path d="M0 80 Q120 10 240 80 T480 60 L480 140 L0 140 Z" fill="url(#aurora)" opacity="0.8" />
+      </Svg>
       <View style={styles.headerContent}>
-        <Text style={styles.welcomeText}>Olá, {userName || 'Jovem'} financista! 👋</Text>
+        <View style={styles.headerTextBlock}>
+          <Text style={styles.welcomeText}>Modo estudante ativado</Text>
+          <Text style={styles.userName}>Olá, {userName}! 👋</Text>
+        </View>
         <View style={styles.streakContainer}>
-          <MaterialIcons name="whatshot" size={16} color="#FFD700" />
+          <MaterialIcons name="whatshot" size={18} color="#FCD34D" />
           <Text style={styles.streakText}>{streak} dias</Text>
+        </View>
+      </View>
+      <View style={styles.quickStats}>
+        <View style={styles.quickStat}>
+          <Text style={styles.statLabel}>XP acumulado</Text>
+          <Text style={styles.statValue}>{xp}</Text>
+        </View>
+        <View style={styles.quickStat}>
+          <Text style={styles.statLabel}>Trilhas</Text>
+          <Text style={styles.statValue}>{trilhasConcluidas}/{totalTrilhas}</Text>
+        </View>
+        <View style={[styles.quickStat, styles.quickStatLast]}>
+          <Text style={styles.statLabel}>Foco diário</Text>
+          <Text style={styles.statValue}>{Math.max(streak, 1)} min</Text>
         </View>
       </View>
       <View style={styles.testButtons}>
@@ -152,10 +223,10 @@ const HeaderWithStreak = ({ userName = "Jovem Financista", streak = 7, onReset, 
         <TouchableOpacity style={styles.testButton} onPress={onSimulate}>
           <Text style={styles.testButtonText}>Simular</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.testButton, { backgroundColor: '#4A90E2' }]} onPress={onTestSync}>
+        <TouchableOpacity style={[styles.testButton, { borderColor: '#38BDF8', backgroundColor: 'rgba(56, 189, 248, 0.15)' }]} onPress={onTestSync}>
           <Text style={styles.testButtonText}>Test Sync</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.testButton, { backgroundColor: '#FF6B6B' }]} onPress={onCleanupTest}>
+        <TouchableOpacity style={[styles.testButton, { borderColor: '#F87171', backgroundColor: 'rgba(248, 113, 113, 0.2)' }]} onPress={onCleanupTest}>
           <Text style={styles.testButtonText}>Cleanup</Text>
         </TouchableOpacity>
       </View>
@@ -573,19 +644,32 @@ const HomeScreen = ({ navigation }) => {
     });
   };
 
+  const progressPercentage = userData.totalTrilhas > 0
+    ? (userData.trilhasConcluidas / userData.totalTrilhas)
+    : 0;
+  const progressPercentRounded = Math.min(100, Math.max(0, Math.round(progressPercentage * 100)));
+  const remainingPercent = Math.max(0, 100 - progressPercentRounded);
+
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.techBackdrop}>
+        <View style={[styles.auroraBlob, styles.auroraBlobLeft]} />
+        <View style={[styles.auroraBlob, styles.auroraBlobRight]} />
+      </View>
       {/* Header com Streak */}
-      <HeaderWithStreak 
-        userName={userData.primeiroNome} 
-        streak={userData.streak} 
+      <HeaderWithStreak
+        userName={userData.primeiroNome}
+        streak={userData.streak}
+        xp={userData.xp}
+        trilhasConcluidas={userData.trilhasConcluidas}
+        totalTrilhas={userData.totalTrilhas}
         onReset={handleReset}
         onSimulate={handleSimulate}
         onTestSync={handleTestSync}
         onCleanupTest={handleCleanupTest}
       />
-      
-      <ScrollView 
+
+      <ScrollView
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
@@ -593,9 +677,12 @@ const HomeScreen = ({ navigation }) => {
         <View style={styles.progressSection}>
           <View style={styles.progressCard}>
             <View style={styles.progressHeader}>
-              <Text style={styles.progressTitle}>Seu Progresso</Text>
+              <View>
+                <Text style={styles.progressBadge}>Trilha atual</Text>
+                <Text style={styles.progressTitle}>Painel do estudante</Text>
+              </View>
               <View style={styles.xpContainer}>
-                <MaterialIcons name="star" size={20} color="#FFD700" />
+                <MaterialIcons name="star" size={18} color="#FCD34D" />
                 <Text style={styles.xpText}>{userData.xp} XP</Text>
               </View>
             </View>
@@ -603,19 +690,52 @@ const HomeScreen = ({ navigation }) => {
               {userData.trilhasConcluidas} de {userData.totalTrilhas} trilhas concluídas
             </Text>
             <View style={styles.progressBar}>
-              <View 
+              <View
                 style={[
-                  styles.progressFill, 
-                  { width: `${(userData.trilhasConcluidas / userData.totalTrilhas) * 100}%` }
-                ]} 
+                  styles.progressFill,
+                  { width: `${progressPercentRounded}%` }
+                ]}
               />
+            </View>
+            <View style={styles.progressMetaRow}>
+              <View style={styles.metaItem}>
+                <Text style={styles.metaLabel}>Foco diário</Text>
+                <Text style={styles.metaValue}>{Math.max(userData.streak, 1)} min</Text>
+              </View>
+              <View style={styles.metaItem}>
+                <Text style={styles.metaLabel}>Próxima meta</Text>
+                <Text style={styles.metaValue}>{remainingPercent}%</Text>
+              </View>
+              <View style={styles.metaItem}>
+                <Text style={styles.metaLabel}>Modo</Text>
+                <Text style={styles.metaValue}>Estudante</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.studyModeCard}>
+          <View style={styles.studyModeHeader}>
+            <Text style={styles.studyModeTitle}>Modo estudante</Text>
+            <Feather name="headphones" size={18} color="#A5B4FC" />
+          </View>
+          <Text style={styles.studyModeText}>
+            Ative sessões curtas com lembretes inteligentes e receba reforços visuais em tempo real.
+          </Text>
+          <View style={styles.studyModeTags}>
+            <View style={styles.studyModeChip}>
+              <Text style={styles.studyModeChipText}>Pomodoro 10min</Text>
+            </View>
+            <View style={styles.studyModeChip}>
+              <Text style={styles.studyModeChipText}>Notas automáticas</Text>
             </View>
           </View>
         </View>
 
         {/* Trilhas em Layout Responsivo */}
         <View style={styles.trilhasSection}>
-          <Text style={styles.trilhasTitle}>Sua Jornada Financeira</Text>
+          <Text style={styles.trilhasTitle}>Sua jornada financeira</Text>
+          <Text style={styles.sectionSubtitle}>Continue desbloqueando trilhas e conquistas brilhantes.</Text>
           <View style={styles.trilhasContainer}>
             {renderTrilhasResponsive()}
           </View>
@@ -624,16 +744,37 @@ const HomeScreen = ({ navigation }) => {
         {/* Desafios (missões) */}
         {desafios?.length > 0 && (
           <View style={styles.trilhasSection}>
-            <Text style={styles.trilhasTitle}>Desafios Ativos</Text>
+            <Text style={styles.trilhasTitle}>Missões em tempo real</Text>
+            <Text style={styles.sectionSubtitle}>Complete desafios rápidos e ganhe reforços extras.</Text>
             {desafios.map((d) => {
               const meu = desafiosUsuario.find(x => x.id === d.id);
+              const progresso = Math.min(1, Math.max(0, meu?.progresso ?? (meu?.concluido ? 1 : 0)));
               return (
-                <View key={d.id} style={{ backgroundColor: '#FFF', borderRadius: 12, padding: 16, marginBottom: 10, borderLeftWidth: 4, borderLeftColor: '#4A90E2' }}>
-                  <Text style={{ fontFamily: 'Outfit-Bold', fontSize: 16, color: '#1A1A1A' }}>{d.titulo}</Text>
-                  <Text style={{ fontFamily: 'Outfit-Regular', fontSize: 12, color: '#666', marginTop: 4 }}>{d.descricao}</Text>
-                  <Text style={{ fontFamily: 'Outfit-Regular', fontSize: 12, color: meu?.concluido ? '#18AD77' : '#999', marginTop: 8 }}>
-                    {meu?.concluido ? 'Concluído' : 'Em andamento'}
-                  </Text>
+                <View
+                  key={d.id}
+                  style={[styles.missionCard, meu?.concluido && styles.missionCardDone]}
+                >
+                  <View style={styles.missionIconBubble}>
+                    <MaterialIcons
+                      name={meu?.concluido ? 'emoji-events' : 'flag'}
+                      size={18}
+                      color="#FFFFFF"
+                    />
+                  </View>
+                  <View style={styles.missionContent}>
+                    <Text style={styles.missionTitle}>{d.titulo}</Text>
+                    <Text style={styles.missionDescription}>{d.descricao}</Text>
+                    <View style={styles.missionProgressBar}>
+                      <View
+                        style={[styles.missionProgressFill, { width: `${progresso * 100}%` }]}
+                      />
+                    </View>
+                  </View>
+                  <View style={[styles.missionStatus, meu?.concluido && styles.missionStatusDone]}>
+                    <Text style={styles.missionStatusText}>
+                      {meu?.concluido ? 'Concluído' : 'Ativo'}
+                    </Text>
+                  </View>
                 </View>
               );
             })}
@@ -648,40 +789,59 @@ const createResponsiveStyles = (screenWidth, screenHeight) => {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#F7F9FC',
+      backgroundColor: '#050A1B',
+    },
+    techBackdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: '#050A1B',
+    },
+    auroraBlob: {
+      position: 'absolute',
+      width: screenWidth * 0.8,
+      height: screenWidth * 0.8,
+      borderRadius: screenWidth * 0.4,
+      opacity: 0.35,
+      backgroundColor: '#22D3EE',
+      transform: [{ scale: 1.2 }],
+    },
+    auroraBlobLeft: {
+      top: -screenWidth * 0.2,
+      left: -screenWidth * 0.3,
+      backgroundColor: '#34D399',
+    },
+    auroraBlobRight: {
+      top: screenWidth * 0.1,
+      right: -screenWidth * 0.3,
+      backgroundColor: '#6366F1',
     },
     loadingContainer: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: '#F7F9FC',
+      backgroundColor: '#050A1B',
     },
     loadingText: {
       marginTop: 16,
       fontSize: 16,
-      color: '#18AD77',
+      color: '#2BC896',
       fontFamily: 'Outfit-Regular',
     },
     contentContainer: {
-      paddingHorizontal: 16,
-      paddingBottom: 20,
+      paddingHorizontal: 20,
+      paddingBottom: 40,
+      paddingTop: 20,
     },
     progressSection: {
       marginBottom: 20,
       marginTop: 10,
     },
     progressCard: {
-      backgroundColor: '#FFFFFF',
-      borderRadius: 12,
+      backgroundColor: 'rgba(15, 23, 42, 0.95)',
+      borderRadius: 24,
       paddingHorizontal: 20,
-      paddingVertical: 16,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.08,
-      shadowRadius: 12,
-      elevation: 8,
-      borderLeftWidth: 4,
-      borderLeftColor: '#18AD77',
+      paddingVertical: 18,
+      borderWidth: 1,
+      borderColor: 'rgba(24, 173, 119, 0.3)',
     },
     progressHeader: {
       flexDirection: 'row',
@@ -689,54 +849,135 @@ const createResponsiveStyles = (screenWidth, screenHeight) => {
       alignItems: 'center',
       marginBottom: 12,
     },
-    progressTitle: {
-      fontSize: 18,
-      fontWeight: '700',
+    progressBadge: {
+      fontSize: 12,
       fontFamily: 'Outfit-Bold',
-      color: '#1A1A1A',
+      color: '#A5B4FC',
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+    },
+    progressTitle: {
+      fontSize: 20,
+      fontFamily: 'Outfit-Bold',
+      color: '#F8FAFC',
+      marginTop: 4,
     },
     xpContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: '#FFF3CD',
+      backgroundColor: 'rgba(251, 191, 36, 0.15)',
       paddingHorizontal: 12,
       paddingVertical: 6,
-      borderRadius: 20,
+      borderRadius: 18,
+      borderWidth: 1,
+      borderColor: 'rgba(251, 191, 36, 0.3)',
     },
     xpText: {
       fontSize: 14,
-      fontWeight: '600',
       fontFamily: 'Outfit-Bold',
-      color: '#856404',
+      color: '#FFE082',
       marginLeft: 4,
     },
     progressText: {
       fontSize: 14,
       fontFamily: 'Outfit-Regular',
-      color: '#666666',
-      marginBottom: 16,
+      color: '#CBD5F5',
+      marginBottom: 12,
+      marginTop: 6,
     },
     progressBar: {
-      height: 8,
-      backgroundColor: '#E9ECEF',
-      borderRadius: 4,
+      height: 10,
+      backgroundColor: 'rgba(148, 163, 184, 0.2)',
+      borderRadius: 10,
       overflow: 'hidden',
+      marginBottom: 14,
     },
     progressFill: {
       height: '100%',
       backgroundColor: '#18AD77',
-      borderRadius: 4,
+      borderRadius: 10,
+    },
+    progressMetaRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: 4,
+    },
+    metaItem: {
+      flex: 1,
+      marginRight: 10,
+    },
+    metaLabel: {
+      fontSize: 12,
+      fontFamily: 'Outfit-Regular',
+      color: '#94A3B8',
+    },
+    metaValue: {
+      fontSize: 16,
+      fontFamily: 'Outfit-Bold',
+      color: '#F8FAFC',
+      marginTop: 4,
+    },
+    studyModeCard: {
+      backgroundColor: 'rgba(15, 118, 110, 0.15)',
+      borderRadius: 22,
+      padding: 18,
+      borderWidth: 1,
+      borderColor: 'rgba(16, 185, 129, 0.3)',
+      marginBottom: 24,
+    },
+    studyModeHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    studyModeTitle: {
+      fontSize: 18,
+      fontFamily: 'Outfit-Bold',
+      color: '#5DF1CE',
+    },
+    studyModeText: {
+      fontSize: 14,
+      fontFamily: 'Outfit-Regular',
+      color: '#E0F2FE',
+      lineHeight: 20,
+      marginBottom: 10,
+    },
+    studyModeTags: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+    },
+    studyModeChip: {
+      backgroundColor: 'rgba(45, 212, 191, 0.2)',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: 'rgba(45, 212, 191, 0.4)',
+      marginRight: 8,
+      marginBottom: 8,
+    },
+    studyModeChipText: {
+      fontSize: 12,
+      fontFamily: 'Outfit-Bold',
+      color: '#CCFBF1',
     },
     trilhasSection: {
-      marginBottom: 20,
+      marginBottom: 30,
     },
     trilhasTitle: {
-      fontSize: 20,
-      fontWeight: '700',
+      fontSize: 22,
       fontFamily: 'Outfit-Bold',
-      color: '#1A1A1A',
-      marginBottom: 20,
-      textAlign: 'center',
+      color: '#F8FAFC',
+      marginBottom: 8,
+      textAlign: 'left',
+    },
+    sectionSubtitle: {
+      fontSize: 14,
+      fontFamily: 'Outfit-Regular',
+      color: '#94A3B8',
+      marginBottom: 16,
+      textAlign: 'left',
     },
     trilhasContainer: {
       alignItems: 'center',
@@ -744,7 +985,7 @@ const createResponsiveStyles = (screenWidth, screenHeight) => {
     },
     trilhaItemContainer: {
       alignItems: 'center',
-      marginBottom: 15,
+      marginBottom: 20,
       width: '100%',
     },
     simpleConnector: {
@@ -752,17 +993,89 @@ const createResponsiveStyles = (screenWidth, screenHeight) => {
       marginVertical: 5,
     },
     connectorLine: {
-      width: 2,
-      height: 15,
+      width: 3,
+      height: 18,
       backgroundColor: '#18AD77',
-      borderRadius: 1,
+      borderRadius: 2,
+      shadowColor: '#18AD77',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.6,
+      shadowRadius: 4,
     },
     connectorDot: {
-      width: 6,
+      width: 8,
+      height: 8,
+      backgroundColor: '#22D3EE',
+      borderRadius: 4,
+      marginTop: 4,
+      shadowColor: '#22D3EE',
+      shadowOpacity: 0.6,
+      shadowRadius: 4,
+    },
+    missionCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: 'rgba(15, 23, 42, 0.9)',
+      borderRadius: 18,
+      padding: 16,
+      marginBottom: 14,
+      borderWidth: 1,
+      borderColor: 'rgba(56, 189, 248, 0.3)',
+    },
+    missionCardDone: {
+      borderColor: 'rgba(16, 185, 129, 0.5)',
+      backgroundColor: 'rgba(6, 95, 70, 0.6)',
+    },
+    missionIconBubble: {
+      width: 42,
+      height: 42,
+      borderRadius: 21,
+      backgroundColor: 'rgba(99, 102, 241, 0.4)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 12,
+    },
+    missionContent: {
+      flex: 1,
+    },
+    missionTitle: {
+      fontSize: 16,
+      fontFamily: 'Outfit-Bold',
+      color: '#F8FAFC',
+    },
+    missionDescription: {
+      fontSize: 13,
+      fontFamily: 'Outfit-Regular',
+      color: '#CBD5F5',
+      marginTop: 4,
+      marginBottom: 10,
+    },
+    missionProgressBar: {
       height: 6,
+      backgroundColor: 'rgba(148, 163, 184, 0.3)',
+      borderRadius: 6,
+      overflow: 'hidden',
+    },
+    missionProgressFill: {
+      height: '100%',
       backgroundColor: '#18AD77',
-      borderRadius: 3,
-      marginTop: 3,
+    },
+    missionStatus: {
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 14,
+      backgroundColor: 'rgba(59, 130, 246, 0.2)',
+      borderWidth: 1,
+      borderColor: 'rgba(59, 130, 246, 0.5)',
+    },
+    missionStatusDone: {
+      backgroundColor: 'rgba(16, 185, 129, 0.2)',
+      borderColor: 'rgba(16, 185, 129, 0.6)',
+    },
+    missionStatusText: {
+      fontSize: 12,
+      fontFamily: 'Outfit-Bold',
+      color: '#E2E8F0',
     },
   });
 };

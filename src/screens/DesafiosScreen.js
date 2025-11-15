@@ -19,13 +19,26 @@ const hp = (percentage) => {
 
 // Componente para item de questão
 const QuestaoItem = ({ questao, onPress, isCompleted = false, index }) => {
-  const getDificuldadeColor = (dificuldade) => {
-    switch (dificuldade) {
-      case 'facil': return '#18AD77';
-      case 'medio': return '#FFD700';
-      case 'dificil': return '#FF6B6B';
-      default: return '#18AD77';
+  const palette = {
+    facil: {
+      primary: '#18AD77',
+      badge: 'rgba(24, 173, 119, 0.2)',
+      border: 'rgba(24, 173, 119, 0.5)'
+    },
+    medio: {
+      primary: '#FBBF24',
+      badge: 'rgba(251, 191, 36, 0.2)',
+      border: 'rgba(251, 191, 36, 0.45)'
+    },
+    dificil: {
+      primary: '#F472B6',
+      badge: 'rgba(244, 114, 182, 0.2)',
+      border: 'rgba(244, 114, 182, 0.45)'
     }
+  }[questao.dificuldade] || {
+    primary: '#18AD77',
+    badge: 'rgba(24, 173, 119, 0.2)',
+    border: 'rgba(24, 173, 119, 0.5)'
   };
 
   const getDificuldadeText = (dificuldade) => {
@@ -39,47 +52,42 @@ const QuestaoItem = ({ questao, onPress, isCompleted = false, index }) => {
 
   const styles = StyleSheet.create({
     questaoContainer: {
-      backgroundColor: '#FFFFFF',
-      borderRadius: 12,
+      backgroundColor: 'rgba(15, 23, 42, 0.95)',
+      borderRadius: 18,
       padding: 16,
       marginBottom: 12,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
-      borderLeftWidth: 4,
-      borderLeftColor: getDificuldadeColor(questao.dificuldade),
+      borderWidth: 1,
+      borderColor: palette.border,
     },
     questaoHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 8,
+      marginBottom: 10,
     },
     questaoTitulo: {
       fontSize: 16,
-      fontWeight: '600',
       fontFamily: 'Outfit-Bold',
-      color: '#1A1A1A',
+      color: '#F8FAFC',
       flex: 1,
     },
     dificuldadeBadge: {
-      backgroundColor: getDificuldadeColor(questao.dificuldade),
-      paddingHorizontal: 8,
+      backgroundColor: palette.badge,
+      paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: 12,
+      borderWidth: 1,
+      borderColor: palette.border,
     },
     dificuldadeText: {
       fontSize: 12,
-      fontWeight: '600',
-      color: '#FFFFFF',
       fontFamily: 'Outfit-Bold',
+      color: palette.primary,
     },
     questaoPergunta: {
       fontSize: 14,
       fontFamily: 'Outfit-Regular',
-      color: '#666666',
+      color: '#CBD5F5',
       lineHeight: 20,
       marginBottom: 12,
     },
@@ -90,17 +98,29 @@ const QuestaoItem = ({ questao, onPress, isCompleted = false, index }) => {
     },
     opcoesCount: {
       fontSize: 12,
-      fontFamily: 'Outfit-Regular',
-      color: '#999999',
+      fontFamily: 'Outfit-Bold',
+      color: '#E2E8F0',
+      backgroundColor: 'rgba(148, 163, 184, 0.2)',
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 12,
     },
     statusIcon: {
-      width: 24,
-      height: 24,
-      borderRadius: 12,
-      backgroundColor: isCompleted ? '#18AD77' : '#E0E0E0',
-      justifyContent: 'center',
+      flexDirection: 'row',
       alignItems: 'center',
+      backgroundColor: isCompleted ? 'rgba(24, 173, 119, 0.2)' : 'rgba(148, 163, 184, 0.2)',
+      borderRadius: 14,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderWidth: 1,
+      borderColor: isCompleted ? 'rgba(24, 173, 119, 0.5)' : 'rgba(148, 163, 184, 0.4)'
     },
+    statusText: {
+      fontSize: 12,
+      fontFamily: 'Outfit-Bold',
+      color: isCompleted ? '#2BC896' : '#CBD5F5',
+      marginLeft: 4,
+    }
   });
 
   return (
@@ -125,11 +145,12 @@ const QuestaoItem = ({ questao, onPress, isCompleted = false, index }) => {
           {questao.opcoes.length} opções
         </Text>
         <View style={styles.statusIcon}>
-          <MaterialIcons 
-            name={isCompleted ? "check" : "play-arrow"} 
-            size={14} 
-            color={isCompleted ? "#FFFFFF" : "#999999"} 
+          <MaterialIcons
+            name={isCompleted ? "check-circle" : "play-arrow"}
+            size={14}
+            color={isCompleted ? '#2BC896' : '#E2E8F0'}
           />
+          <Text style={styles.statusText}>{isCompleted ? 'Concluída' : 'Estudar'}</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -234,14 +255,18 @@ const DesafiosScreen = () => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#F7F9FC',
+      backgroundColor: '#050A1B',
     },
     header: {
-      backgroundColor: '#18AD77',
+      backgroundColor: '#0F172A',
       paddingHorizontal: 20,
-      paddingVertical: 16,
+      paddingVertical: 18,
       flexDirection: 'row',
       alignItems: 'center',
+      borderBottomLeftRadius: 24,
+      borderBottomRightRadius: 24,
+      borderBottomWidth: 1,
+      borderColor: 'rgba(24, 173, 119, 0.3)'
     },
     backButton: {
       marginRight: 16,
@@ -253,18 +278,19 @@ const DesafiosScreen = () => {
       fontSize: 18,
       fontWeight: '700',
       fontFamily: 'Outfit-Bold',
-      color: '#FFFFFF',
+      color: '#F8FAFC',
     },
     headerSubtitle: {
       fontSize: 14,
       fontFamily: 'Outfit-Regular',
-      color: '#FFFFFF',
-      opacity: 0.9,
+      color: '#94A3B8',
+      marginTop: 4,
     },
     content: {
       flex: 1,
-      paddingHorizontal: 16,
+      paddingHorizontal: 20,
       paddingTop: 20,
+      paddingBottom: 40,
     },
     filtersRow: {
       marginBottom: 12,
@@ -272,7 +298,6 @@ const DesafiosScreen = () => {
     chipsRow: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 8,
       marginBottom: 8,
     },
     chip: {
@@ -280,32 +305,30 @@ const DesafiosScreen = () => {
       paddingVertical: 6,
       borderRadius: 16,
       backgroundColor: '#F0F0F0',
+      marginRight: 8,
+      marginBottom: 8,
     },
     chipActive: { backgroundColor: '#18AD77' },
     chipText: { fontFamily: 'Outfit-Bold', color: '#1A1A1A' },
     chipTextActive: { color: '#FFFFFF' },
     moduloInfo: {
-      backgroundColor: '#FFFFFF',
-      borderRadius: 12,
-      padding: 16,
+      backgroundColor: 'rgba(15, 23, 42, 0.9)',
+      borderRadius: 20,
+      padding: 18,
       marginBottom: 20,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
+      borderWidth: 1,
+      borderColor: 'rgba(99, 102, 241, 0.3)',
     },
     moduloTitle: {
       fontSize: 20,
-      fontWeight: '700',
       fontFamily: 'Outfit-Bold',
-      color: '#1A1A1A',
+      color: '#F8FAFC',
       marginBottom: 8,
     },
     moduloDescription: {
       fontSize: 14,
       fontFamily: 'Outfit-Regular',
-      color: '#666666',
+      color: '#CBD5F5',
       lineHeight: 20,
     },
     questoesSection: {
@@ -315,12 +338,11 @@ const DesafiosScreen = () => {
       fontSize: 18,
       fontWeight: '600',
       fontFamily: 'Outfit-Bold',
-      color: '#1A1A1A',
+      color: '#E2E8F0',
       marginBottom: 16,
     },
     questoesList: {
       flex: 1,
-      gap: 10,
     },
     gridContainer: {
       flexDirection: 'row',
@@ -336,7 +358,7 @@ const DesafiosScreen = () => {
     emptyText: {
       fontSize: 16,
       fontFamily: 'Outfit-Regular',
-      color: '#999999',
+      color: '#94A3B8',
       textAlign: 'center',
     },
     blockedState: {
@@ -344,24 +366,23 @@ const DesafiosScreen = () => {
       justifyContent: 'center',
       alignItems: 'center',
       paddingVertical: 40,
-      backgroundColor: '#FFF5F5',
-      borderRadius: 12,
-      borderWidth: 2,
-      borderColor: '#FFE0E0',
-      borderStyle: 'dashed',
+      backgroundColor: 'rgba(15, 23, 42, 0.9)',
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: 'rgba(248, 113, 113, 0.4)',
     },
     blockedTitle: {
       fontSize: 18,
       fontWeight: '600',
       fontFamily: 'Outfit-Bold',
-      color: '#FF6B6B',
+      color: '#F87171',
       marginTop: 16,
       marginBottom: 8,
     },
     blockedText: {
       fontSize: 14,
       fontFamily: 'Outfit-Regular',
-      color: '#666666',
+      color: '#CBD5F5',
       textAlign: 'center',
       lineHeight: 20,
       marginBottom: 20,
@@ -371,13 +392,13 @@ const DesafiosScreen = () => {
       backgroundColor: '#18AD77',
       paddingHorizontal: 24,
       paddingVertical: 12,
-      borderRadius: 8,
+      borderRadius: 12,
     },
     historiaButtonText: {
       fontSize: 14,
       fontWeight: '600',
       fontFamily: 'Outfit-Bold',
-      color: '#FFFFFF',
+      color: '#0F172A',
     },
   });
 
