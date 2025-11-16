@@ -215,8 +215,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   checkboxChecked: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#4CAF50',
+    backgroundColor: '#18AD77',
+    borderColor: '#18AD77',
   },
   checkmark: {
     color: '#fff',
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   termsLink: {
-    color: '#4CAF50',
+    color: '#18AD77',
     textDecorationLine: 'underline',
   },
 });

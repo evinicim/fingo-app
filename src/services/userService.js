@@ -30,11 +30,10 @@ export const salvarDadosPerfil = async (userId, dadosPerfil) => {
     // Salvar ou atualizar o documento do usuário
     await setDoc(userRef, perfilData, { merge: true });
     
-    console.log('✅ Dados do perfil salvos com sucesso:', perfilData);
     return { success: true, data: perfilData };
     
   } catch (error) {
-    console.error('❌ Erro ao salvar dados do perfil:', error);
+    console.error('Erro ao salvar dados do perfil:', error);
     return { success: false, error: error.message };
   }
 };
@@ -47,15 +46,13 @@ export const buscarDadosPerfil = async (userId) => {
     
     if (userSnap.exists()) {
       const userData = userSnap.data();
-      console.log('✅ Dados do perfil carregados:', userData);
       return { success: true, data: userData };
     } else {
-      console.log('⚠️ Usuário não encontrado no Firestore');
       return { success: false, error: 'Usuário não encontrado' };
     }
     
   } catch (error) {
-    console.error('❌ Erro ao buscar dados do perfil:', error);
+    console.error('Erro ao buscar dados do perfil:', error);
     return { success: false, error: error.message };
   }
 };
@@ -72,11 +69,10 @@ export const atualizarDadosPerfil = async (userId, novosDados) => {
 
     await updateDoc(userRef, dadosAtualizados);
     
-    console.log('✅ Dados do perfil atualizados:', dadosAtualizados);
     return { success: true, data: dadosAtualizados };
     
   } catch (error) {
-    console.error('❌ Erro ao atualizar dados do perfil:', error);
+    console.error('Erro ao atualizar dados do perfil:', error);
     return { success: false, error: error.message };
   }
 };
@@ -130,11 +126,10 @@ export const criarUsuarioInicial = async (userId, email, nome) => {
 
     await setDoc(userRef, dadosIniciais);
     
-    console.log('✅ Usuário inicial criado:', dadosIniciais);
     return { success: true, data: dadosIniciais };
     
   } catch (error) {
-    console.error('❌ Erro ao criar usuário inicial:', error);
+    console.error('Erro ao criar usuário inicial:', error);
     return { success: false, error: error.message };
   }
 };
@@ -146,11 +141,10 @@ export const excluirConta = async (userId) => {
     const userRef = doc(db, 'users', userId);
     await deleteDoc(userRef);
     
-    console.log('✅ Dados do usuário excluídos do Firestore');
     return { success: true };
     
   } catch (error) {
-    console.error('❌ Erro ao excluir dados do usuário:', error);
+    console.error('Erro ao excluir dados do usuário:', error);
     return { success: false, error: error.message };
   }
 };

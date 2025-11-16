@@ -28,7 +28,7 @@ const AccordionItem = ({ question, answer }) => {
                 <Feather
                     name={expanded ? "minus" : "plus"}
                     size={24}
-                    color="#17D689"
+                    color="#18AD77"
                 />
             </TouchableOpacity>
             {expanded && (

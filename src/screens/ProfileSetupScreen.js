@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
   progressFill: {
     height: '100%',
     width: '100%',
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#18AD77',
     borderRadius: 2,
   },
   progressText: {
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
     borderColor: '#E9ECEF',
   },
   avatarSelected: {
-    borderColor: '#4CAF50',
+    borderColor: '#18AD77',
     backgroundColor: '#F0F9F0',
   },
   avatarIcon: {
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   avatarNameSelected: {
-    color: '#4CAF50',
+    color: '#18AD77',
   },
   inputContainer: {
     flexDirection: 'row',
@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
     borderColor: '#E9ECEF',
   },
   knowledgeSelected: {
-    borderColor: '#4CAF50',
+    borderColor: '#18AD77',
     backgroundColor: '#F0F9F0',
   },
   knowledgeIcon: {
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   knowledgeLabelSelected: {
-    color: '#4CAF50',
+    color: '#18AD77',
   },
   knowledgeDescription: {
     fontSize: 14,
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   knowledgeDescriptionSelected: {
-    color: '#4CAF50',
+    color: '#18AD77',
   },
   radioButton: {
     width: 20,
@@ -405,19 +405,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   radioButtonSelected: {
-    borderColor: '#4CAF50',
+    borderColor: '#18AD77',
   },
   radioButtonInner: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#18AD77',
   },
   continueButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#18AD77',
     marginHorizontal: 20,
     paddingVertical: 16,
     borderRadius: 12,

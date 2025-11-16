@@ -169,7 +169,7 @@ const FeedbackScreen = () => {
       backgroundColor: '#F7F9FC',
     },
     header: {
-      backgroundColor: '#58CC02',
+      backgroundColor: '#18AD77',
       paddingHorizontal: 20,
       paddingVertical: 16,
       flexDirection: 'row',
@@ -223,7 +223,7 @@ const FeedbackScreen = () => {
       fontSize: 24,
       fontWeight: '700',
       fontFamily: 'Outfit-Bold',
-      color: respostaCorreta ? '#58CC02' : '#FF6B6B',
+      color: respostaCorreta ? '#18AD77' : '#FF6B6B',
       marginBottom: 12,
       textAlign: 'center',
     },
@@ -289,7 +289,7 @@ const FeedbackScreen = () => {
       marginHorizontal: 8,
     },
     continuarButton: {
-      backgroundColor: '#58CC02',
+      backgroundColor: '#18AD77',
     },
     voltarButton: {
       backgroundColor: '#6C757D',
@@ -358,7 +358,7 @@ const FeedbackScreen = () => {
             <MaterialIcons
               name={respostaCorreta ? 'check-circle' : 'cancel'}
               size={40}
-              color={respostaCorreta ? '#58CC02' : '#FF6B6B'}
+              color={respostaCorreta ? '#18AD77' : '#FF6B6B'}
             />
           </View>
 

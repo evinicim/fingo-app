@@ -308,7 +308,7 @@ const DesafiosScreen = () => {
       marginRight: 8,
       marginBottom: 8,
     },
-    chipActive: { backgroundColor: '#58CC02' },
+    chipActive: { backgroundColor: '#18AD77' },
     chipText: { fontFamily: 'Outfit-Bold', color: '#1A1A1A' },
     chipTextActive: { color: '#FFFFFF' },
     moduloInfo: {

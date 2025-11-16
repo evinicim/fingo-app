@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
   topLine: {
     width: '100%',
     height: 2,
-    backgroundColor: '#17D689',
+    backgroundColor: '#18AD77',
     position: 'absolute',
     top: 0,
   },
