@@ -7,7 +7,8 @@ import {
   TouchableOpacity, 
   TextInput, 
   Alert,
-  Dimensions 
+  Dimensions,
+  Image 
 } from 'react-native';
 // CORREÇÃO AQUI: Importação da biblioteca correta
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,6 +19,14 @@ import { salvarDadosPerfil } from '../services/userService';
 import { auth } from '../services/firebaseConfig';
 
 const { width, height } = Dimensions.get('window');
+
+// Avatares disponíveis
+const avatares = [
+  { id: 1, image: require('../assets/images/avatars/avatar1.png') },
+  { id: 2, image: require('../assets/images/avatars/avatar2.png') },
+  { id: 3, image: require('../assets/images/avatars/avatar3.png') },
+  { id: 4, image: require('../assets/images/avatars/avatar4.png') },
+];
 
 const ProfileSetupScreen = () => {
   const navigation = useNavigation();
@@ -31,21 +40,11 @@ const ProfileSetupScreen = () => {
     'Outfit-Bold': require('../assets/fonts/Outfit-Bold.ttf'),
   });
 
-  // Opções de avatares
-  const avatares = [
-    { id: 1, icon: '👦', name: 'João' },
-    { id: 2, icon: '👧', name: 'Maria' },
-    { id: 3, icon: '🧑', name: 'Alex' },
-    { id: 4, icon: '👩', name: 'Ana' },
-    { id: 5, icon: '👨', name: 'Carlos' },
-    { id: 6, icon: '👩‍🦱', name: 'Sofia' },
-  ];
-
-  // Níveis de conhecimento financeiro
+  // Níveis de conhecimento financeiro (usando ícones MaterialIcons)
   const niveisConhecimento = [
-    { id: 'iniciante', label: 'Iniciante', description: 'Estou começando a aprender sobre finanças', icon: '🌱' },
-    { id: 'intermediario', label: 'Intermediário', description: 'Já tenho algumas noções básicas', icon: '📈' },
-    { id: 'avancado', label: 'Avançado', description: 'Tenho conhecimento sólido em finanças', icon: '💎' },
+    { id: 'iniciante', label: 'Iniciante', description: 'Estou começando a aprender sobre finanças', icon: 'trending-up', iconColor: '#4CAF50' },
+    { id: 'intermediario', label: 'Intermediário', description: 'Já tenho algumas noções básicas', icon: 'show-chart', iconColor: '#FF9800' },
+    { id: 'avancado', label: 'Avançado', description: 'Tenho conhecimento sólido em finanças', icon: 'diamond', iconColor: '#2196F3' },
   ];
 
   const handleContinuar = async () => {
@@ -71,9 +70,9 @@ const ProfileSetupScreen = () => {
       return;
     }
 
-    // Dados do perfil
+    // Dados do perfil (salvar apenas o ID do avatar, não o objeto completo)
     const dadosPerfil = {
-      avatar: selectedAvatar,
+      avatar: selectedAvatar.id, // Salvar apenas o ID
       idade: idadeNum,
       nivelConhecimento: nivelConhecimento,
       dataConfiguracao: new Date().toISOString(),
@@ -153,13 +152,11 @@ const ProfileSetupScreen = () => {
                 ]}
                 onPress={() => setSelectedAvatar(avatar)}
               >
-                <Text style={styles.avatarIcon}>{avatar.icon}</Text>
-                <Text style={[
-                  styles.avatarName,
-                  selectedAvatar?.id === avatar.id && styles.avatarNameSelected
-                ]}>
-                  {avatar.name}
-                </Text>
+                <Image 
+                  source={avatar.image} 
+                  style={styles.avatarImage}
+                  resizeMode="contain"
+                />
               </TouchableOpacity>
             ))}
           </View>
@@ -198,7 +195,16 @@ const ProfileSetupScreen = () => {
                 ]}
                 onPress={() => setNivelConhecimento(nivel.id)}
               >
-                <Text style={styles.knowledgeIcon}>{nivel.icon}</Text>
+                <View style={[
+                  styles.knowledgeIconContainer,
+                  nivelConhecimento === nivel.id && styles.knowledgeIconContainerSelected
+                ]}>
+                  <MaterialIcons 
+                    name={nivel.icon} 
+                    size={24} 
+                    color={nivelConhecimento === nivel.id ? nivel.iconColor : '#666'} 
+                  />
+                </View>
                 <View style={styles.knowledgeContent}>
                   <Text style={[
                     styles.knowledgeLabel,
@@ -324,17 +330,10 @@ const styles = StyleSheet.create({
     borderColor: '#4CAF50',
     backgroundColor: '#F0F9F0',
   },
-  avatarIcon: {
-    fontSize: 32,
-    marginBottom: 8,
-  },
-  avatarName: {
-    fontSize: 12,
-    fontFamily: 'Outfit-Medium',
-    color: '#666',
-  },
-  avatarNameSelected: {
-    color: '#4CAF50',
+  avatarImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -371,9 +370,17 @@ const styles = StyleSheet.create({
     borderColor: '#4CAF50',
     backgroundColor: '#F0F9F0',
   },
-  knowledgeIcon: {
-    fontSize: 24,
+  knowledgeIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#F5F5F5',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 12,
+  },
+  knowledgeIconContainerSelected: {
+    backgroundColor: '#E8F5E9',
   },
   knowledgeContent: {
     flex: 1,

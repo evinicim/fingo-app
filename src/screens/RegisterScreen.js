@@ -25,8 +25,31 @@ const RegisterScreen = ({ navigation }) => {
   const [nome, setNome] = useState("");
 
   const handleRegister = async () => {
+    // Validações
     if (!nome.trim()) {
       Alert.alert("Erro", "Por favor, informe seu nome.");
+      return;
+    }
+
+    if (!email.trim()) {
+      Alert.alert("Erro", "Por favor, informe seu email.");
+      return;
+    }
+
+    // Validação básica de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      Alert.alert("Erro", "Por favor, informe um email válido.");
+      return;
+    }
+
+    if (!password || password.trim().length === 0) {
+      Alert.alert("Erro", "Por favor, informe uma senha.");
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert("Erro", "A senha deve ter pelo menos 6 caracteres.");
       return;
     }
 
@@ -36,24 +59,42 @@ const RegisterScreen = ({ navigation }) => {
     }
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
       const user = userCredential.user;
       
-      console.log("Usuário cadastrado:", user.email);
+      // ENDPOINT: Usuário cadastrado (teste de registro)
+      // console.log("Usuário cadastrado:", user.email);
       
       // Criar documento inicial do usuário no Firestore
       const resultado = await criarUsuarioInicial(user.uid, email, nome.trim());
       
       if (resultado.success) {
-        navigation.navigate("ProfileSetup");
+        // Navegar para tela de aceite de termos (obrigatório para novos usuários)
+        navigation.navigate("TermosAceite");
       } else {
         Alert.alert("Aviso", "Conta criada, mas houve um problema ao salvar os dados. Você pode continuar.");
-        navigation.navigate("ProfileSetup");
+        navigation.navigate("TermosAceite");
       }
       
     } catch (error) {
       console.error("Erro no cadastro:", error);
-      Alert.alert("Erro no cadastro", error.message);
+      
+      // Mensagens de erro mais amigáveis
+      let mensagemErro = "Ocorreu um erro ao criar sua conta. Tente novamente.";
+      
+      if (error.code === 'auth/email-already-in-use') {
+        mensagemErro = "Este email já está cadastrado. Tente fazer login ou use outro email.";
+      } else if (error.code === 'auth/invalid-email') {
+        mensagemErro = "Email inválido. Por favor, verifique o email informado.";
+      } else if (error.code === 'auth/weak-password') {
+        mensagemErro = "A senha é muito fraca. Use pelo menos 6 caracteres.";
+      } else if (error.code === 'auth/missing-password') {
+        mensagemErro = "Por favor, informe uma senha.";
+      } else if (error.message) {
+        mensagemErro = error.message;
+      }
+      
+      Alert.alert("Erro no cadastro", mensagemErro);
     }
   };
 

@@ -22,6 +22,9 @@ import ProfileEditScreen from '../screens/ProfileEditScreen';
 import PerfilScreen from '../screens/PerfilScreen';
 import NotificationScreen from '../screens/NotificationScreen';
 import PrivacidadeScreen from '../screens/PrivacidadeScreen';
+import TermosDeUsoScreen from '../screens/TermosDeUsoScreen';
+import TermosAceiteScreen from '../screens/TermosAceiteScreen';
+import PoliticaPrivacidadeScreen from '../screens/PoliticaPrivacidadeScreen';
 import SobreScreen from '../screens/SobreScreen';
 import AjudaScreen from '../screens/AjudaScreen';
 
@@ -78,6 +81,7 @@ const AppNavigator = () => {
       <Stack.Screen name="Onboarding" component={OnboardingScreen} />
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen name="TermosAceite" component={TermosAceiteScreen} />
       <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
       <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
       <Stack.Screen name="PasswordRecovery" component={PasswordRecoveryScreen} />
@@ -89,6 +93,8 @@ const AppNavigator = () => {
       <Stack.Screen name="Feedback" component={FeedbackScreen} />
       <Stack.Screen name="Notifications" component={NotificationScreen} />
       <Stack.Screen name="Privacidade" component={PrivacidadeScreen} />
+      <Stack.Screen name="TermosDeUso" component={TermosDeUsoScreen} />
+      <Stack.Screen name="PoliticaPrivacidade" component={PoliticaPrivacidadeScreen} />
       <Stack.Screen name="Sobre" component={SobreScreen} />
       <Stack.Screen name="Ajuda" component={AjudaScreen} />
     </Stack.Navigator>

@@ -41,24 +41,39 @@ const PerfilScreen = () => {
         return;
       }
 
+      // Limpar cache de progresso para garantir dados atualizados
+      const { invalidateProgressCache } = require('../services/progressService');
+      invalidateProgressCache();
+
       // Buscar dados do perfil
       const resultado = await buscarDadosPerfil(userId);
       
       if (resultado.success) {
-        setUserData(resultado.data);
+        const dados = resultado.data;
+        // ENDPOINT: Dados do perfil carregados (teste de carregamento)
+        // console.log('📊 Dados do perfil carregados:', dados);
+        // console.log('🖼️ Avatar nos dados:', dados.avatar, 'Tipo:', typeof dados.avatar);
+        setUserData(dados);
         
-        // Estatísticas dinâmicas
+        // Estatísticas dinâmicas (forçar recálculo sem cache)
         const stats = await getUserStats();
+        // ENDPOINT: Stats recebidas (teste de dados)
+        // console.log('📊 Stats recebidas na PerfilScreen:', stats);
+        
         const trilhasComStatus = await getTrilhasWithUnlockStatus();
         const progressoTotal = trilhasComStatus.length
           ? Math.round(trilhasComStatus.reduce((acc, t) => acc + t.progresso, 0) / trilhasComStatus.length)
           : 0;
 
+        // ENDPOINT: Progresso calculado (teste de cálculo)
+        // console.log('📊 Progresso total calculado:', progressoTotal);
+        // console.log('📊 Trilhas com status:', trilhasComStatus.map(t => ({ id: t.id, progresso: t.progresso })));
+
         setProgressData({
-          trilhasConcluidas: stats.trilhasConcluidas,
-          totalTrilhas: stats.totalTrilhas,
-          questoesCompletadas: stats.questoesRespondidas,
-          progressoTotal,
+          trilhasConcluidas: stats.trilhasConcluidas || 0,
+          totalTrilhas: stats.totalTrilhas || 0,
+          questoesCompletadas: stats.questoesRespondidas || 0,
+          progressoTotal: progressoTotal || 0,
         });
         // Atualiza campos exibidos
         setUserData((prev) => ({ ...(prev || {}), xp: stats.xp, nivel: stats.level }));
@@ -115,19 +130,68 @@ const PerfilScreen = () => {
     );
   };
 
+  // Avatares disponíveis (mesma lista do ProfileSetupScreen)
+  const avatares = [
+    { id: 1, image: require('../assets/images/avatars/avatar1.png') },
+    { id: 2, image: require('../assets/images/avatars/avatar2.png') },
+    { id: 3, image: require('../assets/images/avatars/avatar3.png') },
+    { id: 4, image: require('../assets/images/avatars/avatar4.png') },
+  ];
+
   // Obter avatar do usuário
-  const getAvatarDisplay = () => {
-    if (!userData?.avatar) {
-      return '👤'; // Avatar padrão
+  const getAvatarImage = () => {
+    // ENDPOINT: Verificação de avatar (teste de parsing)
+    // console.log('🔍 Verificando avatar - userData?.avatar:', userData?.avatar, 'Tipo:', typeof userData?.avatar);
+    
+    // Verificar se avatar existe (incluindo 0 que é falsy mas válido)
+    if (userData?.avatar === null || userData?.avatar === undefined) {
+      // ENDPOINT: Avatar não encontrado
+      // console.log('⚠️ Avatar não encontrado nos dados do usuário');
+      return null;
     }
     
-    // Se for um objeto com ícone
-    if (typeof userData.avatar === 'object' && userData.avatar.icon) {
-      return userData.avatar.icon;
+    // Extrair ID do avatar
+    let avatarId = null;
+    
+    if (typeof userData.avatar === 'number') {
+      avatarId = userData.avatar;
+      // ENDPOINT: Avatar ID extraído (número)
+      // console.log('✅ Avatar ID (número):', avatarId);
+    } else if (typeof userData.avatar === 'string') {
+      const parsed = parseInt(userData.avatar, 10);
+      if (!isNaN(parsed)) {
+        avatarId = parsed;
+        // ENDPOINT: Avatar ID extraído (string convertida)
+        // console.log('✅ Avatar ID (string convertida):', avatarId);
+      } else {
+        // Mantido para debug de avatares inválidos
+        // console.log('⚠️ Avatar é string mas não é número:', userData.avatar);
+        return null;
+      }
+    } else if (typeof userData.avatar === 'object' && userData.avatar.id) {
+      avatarId = userData.avatar.id;
+      // ENDPOINT: Avatar ID extraído (objeto)
+      // console.log('✅ Avatar ID (objeto):', avatarId);
     }
     
-    // Se for uma string (emoji)
-    return userData.avatar;
+    // Buscar avatar na lista
+    if (avatarId !== null && avatarId !== undefined) {
+      // ENDPOINT: Busca de avatar na lista (teste de match)
+      // console.log('🔎 Buscando avatar com ID:', avatarId, 'na lista:', avatares.map(a => a.id));
+      const avatar = avatares.find(a => a.id === avatarId);
+      if (avatar && avatar.image) {
+        // ENDPOINT: Avatar encontrado
+        // console.log('✅ Avatar encontrado na lista! ID:', avatarId);
+        return avatar.image;
+      } else {
+        // Mantido para debug de avatares não encontrados
+        // console.log('❌ Avatar não encontrado na lista para ID:', avatarId);
+      }
+    }
+    
+    // ENDPOINT: Nenhum avatar válido
+    // console.log('⚠️ Retornando null - nenhum avatar válido encontrado');
+    return null;
   };
 
   if (!fontsLoaded || loading) {
@@ -146,9 +210,40 @@ const PerfilScreen = () => {
           <View style={styles.profileSection}>
             <Text style={styles.profileTitle}>Perfil</Text>
             
-            {/* Avatar - Emoji ou Ícone */}
+            {/* Avatar - Imagem PNG */}
             <View style={styles.avatarContainer}>
-              <Text style={styles.avatarEmoji}>{getAvatarDisplay()}</Text>
+              {(() => {
+                const avatarImage = getAvatarImage();
+                // ENDPOINT: Renderização de avatar (teste de render)
+                // console.log('🖼️ Renderizando avatar - imagem encontrada:', !!avatarImage);
+                
+                if (avatarImage) {
+                  return (
+                    <Image 
+                      source={avatarImage} 
+                      style={styles.avatarImage} 
+                      resizeMode="cover"
+                      onError={(error) => {
+                        // Mantido para debug de erros de carregamento de imagem
+                        // console.error('❌ Erro ao carregar imagem do avatar:', error);
+                      }}
+                      onLoad={() => {
+                        // ENDPOINT: Imagem carregada com sucesso
+                        // console.log('✅ Imagem do avatar carregada com sucesso!');
+                      }}
+                    />
+                  );
+                }
+                
+                // Avatar padrão (ícone) se não houver imagem
+                // ENDPOINT: Usando avatar padrão
+                // console.log('⚠️ Usando avatar padrão (ícone)');
+                return (
+                  <View style={styles.avatarDefault}>
+                    <Feather name="user" size={48} color="#4CAF50" />
+                  </View>
+                );
+              })()}
             </View>
             
             {/* Nome do Usuário */}
@@ -268,6 +363,19 @@ const styles = StyleSheet.create({
   },
   avatarEmoji: {
     fontSize: 48,
+  },
+  avatarImage: {
+    width: 94,
+    height: 94,
+    borderRadius: 47,
+  },
+  avatarDefault: {
+    width: 94,
+    height: 94,
+    borderRadius: 47,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E8F5E9',
   },
   userName: {
     fontSize: 24,

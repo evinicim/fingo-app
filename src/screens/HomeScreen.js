@@ -77,8 +77,8 @@ const ZigzagConnector = ({ isCompleted = false, index = 0, screenWidth, isLeftTo
   );
 };
 
-// Componente de Header com Streak
-const HeaderWithStreak = ({ userName = "Jovem Financista", streak = 7, onReset, onSimulate }) => {
+// Componente de Header
+const HeaderWithActions = ({ userName = "Jovem Financista", onReset, onSimulate }) => {
   const styles = StyleSheet.create({
     headerContainer: {
       backgroundColor: '#58CC02',
@@ -110,39 +110,19 @@ const HeaderWithStreak = ({ userName = "Jovem Financista", streak = 7, onReset, 
     testButtonText: {
       color: '#FFFFFF',
       fontSize: 12,
-      fontWeight: '600',
+      fontFamily: 'Outfit-Bold',
     },
     welcomeText: {
-      fontSize: 18,
-      fontWeight: '600',
+      fontSize: 20,
       color: '#FFFFFF',
       fontFamily: 'Outfit-Bold',
-    },
-    streakContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: 'rgba(255, 255, 255, 0.2)',
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 20,
-    },
-    streakText: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: '#FFFFFF',
-      fontFamily: 'Outfit-Bold',
-      marginLeft: 5,
     },
   });
 
   return (
     <View style={styles.headerContainer}>
       <View style={styles.headerContent}>
-        <Text style={styles.welcomeText}>Olá, {userName}! 👋</Text>
-        <View style={styles.streakContainer}>
-          <MaterialIcons name="whatshot" size={16} color="#FFD700" />
-          <Text style={styles.streakText}>{streak} dias</Text>
-        </View>
+        <Text style={styles.welcomeText}>Olá, {userName}!</Text>
       </View>
       <View style={styles.testButtons}>
         <TouchableOpacity style={styles.testButton} onPress={onReset}>
@@ -172,7 +152,6 @@ const HomeScreen = ({ navigation }) => {
   const [userData, setUserData] = useState({
     name: "Jovem Financista",
     primeiroNome: "Jovem",
-    streak: 7,
     totalTrilhas: 0,
     trilhasConcluidas: 0,
     xp: 0,
@@ -189,9 +168,21 @@ const HomeScreen = ({ navigation }) => {
       try {
         // Marcar início do carregamento
         const startTime = Date.now();
-        console.log('⏱️ Iniciando carregamento da Home...');
+        // ENDPOINT: Iniciando carregamento da Home (teste de performance)
+        // console.log('⏱️ Iniciando carregamento da Home...');
         
-        const trilhasData = await getTrilhas();
+        const uid = auth.currentUser?.uid;
+        
+        // Carregar dados do cache primeiro (mais rápido)
+        const { getCache } = require('../services/cacheService');
+        const [cachedTrilhas, cachedPerfil, cachedStats] = await Promise.all([
+          getCache('trilhas'),
+          uid ? getCache('perfil', uid) : null,
+          uid ? getCache('stats', uid) : null,
+        ]);
+        
+        // Carregar trilhas (usar cache se disponível)
+        const trilhasData = cachedTrilhas || await getTrilhas();
         setTrilhas(trilhasData);
         // inicializa animações conforme número de trilhas
         if (trilhasData?.length) {
@@ -199,40 +190,39 @@ const HomeScreen = ({ navigation }) => {
           pulseAnimations.splice(0, pulseAnimations.length, ...anims);
         }
 
-        const status = await getTrilhasWithUnlockStatus();
+        // Carregar tudo em paralelo (não sequencial)
+        const [status, ativos, meus, stats, perfilResult] = await Promise.all([
+          getTrilhasWithUnlockStatus(),
+          getDesafiosAtivos(),
+          getDesafiosDoUsuario(),
+          cachedStats || (uid ? getUserStats() : Promise.resolve({ totalTrilhas: 0, trilhasConcluidas: 0, xp: 0 })),
+          cachedPerfil ? Promise.resolve({ success: true, data: cachedPerfil }) : (uid ? buscarDadosPerfil(uid) : Promise.resolve({ success: false })),
+        ]);
+        
         // Reordena por ordem para evitar "fora de ordem" na UI
         status.sort((a, b) => (trilhasData.find(t => t.id === a.id)?.ordem ?? 999) - (trilhasData.find(t => t.id === b.id)?.ordem ?? 999));
         setTrilhasComStatus(status);
-        await debugTrilhasStatus();
-        
-        // carrega desafios (missões)
-        const ativos = await getDesafiosAtivos();
-        const meus = await getDesafiosDoUsuario();
         setDesafios(ativos);
         setDesafiosUsuario(meus);
-
-        // Carregar dados do usuário do Firestore
-        const uid = auth.currentUser?.uid;
-        if (uid) {
-          const stats = await getUserStats();
-          const perfilResult = await buscarDadosPerfil(uid);
-          if (perfilResult.success) {
-            setUserData({
-              name: perfilResult.data.nome || 'Jovem Financista',
-              primeiroNome: perfilResult.data.primeiroNome || perfilResult.data.nome?.split(' ')[0] || 'Jovem',
-              streak: 7, // TODO: implementar streak real
-              totalTrilhas: stats.totalTrilhas,
-              trilhasConcluidas: stats.trilhasConcluidas,
-              xp: stats.xp,
-            });
-          }
+        
+        // Atualizar dados do usuário
+        if (perfilResult.success) {
+          const primeiroNome = perfilResult.data.primeiroNome || perfilResult.data.nome?.split(' ')[0] || 'Jovem';
+          setUserData({
+            name: perfilResult.data.nome || 'Jovem Financista',
+            primeiroNome: primeiroNome,
+            totalTrilhas: stats.totalTrilhas,
+            trilhasConcluidas: stats.trilhasConcluidas,
+            xp: stats.xp,
+          });
         }
 
         setLoading(false);
         
         // Medir tempo de carregamento
         const loadTime = Date.now() - startTime;
-        console.log(`✅ Home carregada em ${loadTime}ms`);
+        // ENDPOINT: Home carregada (teste de performance)
+        // console.log(`✅ Home carregada em ${loadTime}ms`);
       } catch (error) {
         console.error('Erro ao carregar status das trilhas:', error);
         setLoading(false);
@@ -256,10 +246,10 @@ const HomeScreen = ({ navigation }) => {
             const stats = await getUserStats();
             const perfilResult = await buscarDadosPerfil(uid);
             if (perfilResult.success) {
+              const primeiroNome = perfilResult.data.primeiroNome || perfilResult.data.nome?.split(' ')[0] || 'Jovem';
               setUserData({
                 name: perfilResult.data.nome || 'Jovem Financista',
-                primeiroNome: perfilResult.data.primeiroNome || perfilResult.data.nome?.split(' ')[0] || 'Jovem',
-                streak: 7,
+                primeiroNome: primeiroNome,
                 totalTrilhas: stats.totalTrilhas,
                 trilhasConcluidas: stats.trilhasConcluidas,
                 xp: stats.xp,
@@ -423,10 +413,9 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header com Streak */}
-      <HeaderWithStreak 
+      {/* Header */}
+      <HeaderWithActions 
         userName={userData.primeiroNome} 
-        streak={userData.streak} 
         onReset={handleReset}
         onSimulate={handleSimulate}
       />
@@ -474,7 +463,7 @@ const HomeScreen = ({ navigation }) => {
             {desafios.map((d) => {
               const meu = desafiosUsuario.find(x => x.id === d.id);
               return (
-                <View key={d.id} style={{ backgroundColor: '#FFF', borderRadius: 12, padding: 16, marginBottom: 10, borderLeftWidth: 4, borderLeftColor: '#4A90E2' }}>
+                <View key={d.id} style={{ backgroundColor: '#FFF', borderRadius: 12, padding: 16, marginBottom: 10 }}>
                   <Text style={{ fontFamily: 'Outfit-Bold', fontSize: 16, color: '#1A1A1A' }}>{d.titulo}</Text>
                   <Text style={{ fontFamily: 'Outfit-Regular', fontSize: 12, color: '#666', marginTop: 4 }}>{d.descricao}</Text>
                   <Text style={{ fontFamily: 'Outfit-Regular', fontSize: 12, color: meu?.concluido ? '#58CC02' : '#999', marginTop: 8 }}>
@@ -526,8 +515,6 @@ const createResponsiveStyles = (screenWidth, screenHeight) => {
       shadowOpacity: 0.08,
       shadowRadius: 12,
       elevation: 8,
-      borderLeftWidth: 4,
-      borderLeftColor: '#58CC02',
     },
     progressHeader: {
       flexDirection: 'row',
@@ -537,7 +524,6 @@ const createResponsiveStyles = (screenWidth, screenHeight) => {
     },
     progressTitle: {
       fontSize: 18,
-      fontWeight: '700',
       fontFamily: 'Outfit-Bold',
       color: '#1A1A1A',
     },
@@ -551,7 +537,6 @@ const createResponsiveStyles = (screenWidth, screenHeight) => {
     },
     xpText: {
       fontSize: 14,
-      fontWeight: '600',
       fontFamily: 'Outfit-Bold',
       color: '#856404',
       marginLeft: 4,
@@ -578,7 +563,6 @@ const createResponsiveStyles = (screenWidth, screenHeight) => {
     },
     trilhasTitle: {
       fontSize: 20,
-      fontWeight: '700',
       fontFamily: 'Outfit-Bold',
       color: '#1A1A1A',
       marginBottom: 20,

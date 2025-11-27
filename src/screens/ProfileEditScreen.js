@@ -8,7 +8,8 @@ import {
   TextInput, 
   Alert,
   ActivityIndicator,
-  Dimensions 
+  Dimensions,
+  Image 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -33,14 +34,12 @@ const ProfileEditScreen = () => {
     'Outfit-Bold': require('../assets/fonts/Outfit-Bold.ttf'),
   });
 
-  // Opções de avatares
+  // Opções de avatares (mesma lista do ProfileSetupScreen)
   const avatares = [
-    { id: 1, icon: '👦', name: 'João' },
-    { id: 2, icon: '👧', name: 'Maria' },
-    { id: 3, icon: '🧑', name: 'Alex' },
-    { id: 4, icon: '👩', name: 'Ana' },
-    { id: 5, icon: '👨', name: 'Carlos' },
-    { id: 6, icon: '👩‍🦱', name: 'Sofia' },
+    { id: 1, image: require('../assets/images/avatars/avatar1.png') },
+    { id: 2, image: require('../assets/images/avatars/avatar2.png') },
+    { id: 3, image: require('../assets/images/avatars/avatar3.png') },
+    { id: 4, image: require('../assets/images/avatars/avatar4.png') },
   ];
 
   // Níveis de conhecimento financeiro
@@ -72,12 +71,15 @@ const ProfileEditScreen = () => {
         const { avatar, idade: idadeAtual, nivelConhecimento: nivelAtual } = resultado.data;
         
         // Configurar avatar
-        if (typeof avatar === 'object' && avatar.id) {
-          setSelectedAvatar(avatar);
-        } else if (typeof avatar === 'string') {
-          // Se for emoji string, encontrar o avatar correspondente
-          const avatarEncontrado = avatares.find(a => a.icon === avatar);
+        const avatarId = typeof avatar === 'number' 
+          ? avatar 
+          : (typeof avatar === 'object' && avatar.id ? avatar.id : null);
+        
+        if (avatarId) {
+          const avatarEncontrado = avatares.find(a => a.id === avatarId);
           setSelectedAvatar(avatarEncontrado || avatares[0]);
+        } else {
+          setSelectedAvatar(avatares[0]); // Avatar padrão
         }
         
         setIdade(idadeAtual ? idadeAtual.toString() : '');
@@ -114,9 +116,9 @@ const ProfileEditScreen = () => {
       return;
     }
 
-    // Dados atualizados
+    // Dados atualizados (salvar apenas o ID do avatar)
     const dadosAtualizados = {
-      avatar: selectedAvatar,
+      avatar: selectedAvatar.id, // Salvar apenas o ID
       idade: idadeNum,
       nivelConhecimento: nivelConhecimento,
     };
@@ -194,13 +196,11 @@ const ProfileEditScreen = () => {
                 ]}
                 onPress={() => setSelectedAvatar(avatar)}
               >
-                <Text style={styles.avatarIcon}>{avatar.icon}</Text>
-                <Text style={[
-                  styles.avatarName,
-                  selectedAvatar?.id === avatar.id && styles.avatarNameSelected
-                ]}>
-                  {avatar.name}
-                </Text>
+                <Image 
+                  source={avatar.image} 
+                  style={styles.avatarImage}
+                  resizeMode="contain"
+                />
               </TouchableOpacity>
             ))}
           </View>
@@ -355,17 +355,10 @@ const styles = StyleSheet.create({
     borderColor: '#4CAF50',
     backgroundColor: '#F0F9F0',
   },
-  avatarIcon: {
-    fontSize: 32,
-    marginBottom: 8,
-  },
-  avatarName: {
-    fontSize: 12,
-    fontFamily: 'Outfit-Medium',
-    color: '#666',
-  },
-  avatarNameSelected: {
-    color: '#4CAF50',
+  avatarImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
   inputContainer: {
     flexDirection: 'row',

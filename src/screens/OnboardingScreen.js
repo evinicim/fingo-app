@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, Image } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import PrimaryNavButton from '../components/PrimaryNavButton'; 
 
 const OnboardingScreen = ({ navigation }) => {

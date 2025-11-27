@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -37,98 +38,93 @@ const QuestaoItem = ({ questao, onPress, isCompleted = false, index }) => {
     }
   };
 
-  const styles = StyleSheet.create({
-    questaoContainer: {
-      backgroundColor: '#FFFFFF',
-      borderRadius: 12,
-      padding: 16,
-      marginBottom: 12,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
-      borderLeftWidth: 4,
-      borderLeftColor: getDificuldadeColor(questao.dificuldade),
-    },
-    questaoHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 8,
-    },
-    questaoTitulo: {
-      fontSize: 16,
-      fontWeight: '600',
-      fontFamily: 'Outfit-Bold',
-      color: '#1A1A1A',
-      flex: 1,
-    },
-    dificuldadeBadge: {
-      backgroundColor: getDificuldadeColor(questao.dificuldade),
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 12,
-    },
-    dificuldadeText: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: '#FFFFFF',
-      fontFamily: 'Outfit-Bold',
-    },
-    questaoPergunta: {
-      fontSize: 14,
-      fontFamily: 'Outfit-Regular',
-      color: '#666666',
-      lineHeight: 20,
-      marginBottom: 12,
-    },
-    questaoFooter: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    opcoesCount: {
-      fontSize: 12,
-      fontFamily: 'Outfit-Regular',
-      color: '#999999',
-    },
-    statusIcon: {
-      width: 24,
-      height: 24,
-      borderRadius: 12,
-      backgroundColor: isCompleted ? '#58CC02' : '#E0E0E0',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-  });
+  const diffColor = getDificuldadeColor(questao.dificuldade);
 
   return (
     <TouchableOpacity
-      style={styles.questaoContainer}
+      style={{
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: diffColor,
+        shadowColor: diffColor,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 4,
+      }}
       onPress={() => onPress(questao)}
-      activeOpacity={0.7}
+      activeOpacity={0.8}
     >
-      <View style={styles.questaoHeader}>
-        <Text style={styles.questaoTitulo}>Questão {index + 1}</Text>
-        <View style={styles.dificuldadeBadge}>
-          <Text style={styles.dificuldadeText}>{getDificuldadeText(questao.dificuldade)}</Text>
+      <View style={{
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 10,
+      }}>
+        <Text style={{
+          fontFamily: 'Outfit-Bold',
+          color: '#1A1A1A',
+          fontSize: 14,
+          flex: 1,
+          marginRight: 8,
+        }}>
+          Questão {index + 1}
+        </Text>
+        <View style={{
+          backgroundColor: diffColor,
+          paddingHorizontal: 10,
+          paddingVertical: 5,
+          borderRadius: 16,
+          minWidth: 60,
+          alignItems: 'center',
+        }}>
+          <Text style={{
+            color: '#FFFFFF',
+            fontFamily: 'Outfit-Bold',
+            fontSize: 11,
+          }}>
+            {getDificuldadeText(questao.dificuldade)}
+          </Text>
         </View>
       </View>
       
-      <Text style={styles.questaoPergunta} numberOfLines={3}>
+      <Text style={{
+        fontFamily: 'Outfit-Regular',
+        color: '#333',
+        fontSize: 13,
+        lineHeight: 18,
+        marginBottom: 12,
+        minHeight: 36,
+      }} numberOfLines={2}>
         {questao.pergunta}
       </Text>
       
-      <View style={styles.questaoFooter}>
-        <Text style={styles.opcoesCount}>
+      <View style={{
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+      }}>
+        <Text style={{
+          color: '#999',
+          fontFamily: 'Outfit-Regular',
+          fontSize: 11,
+        }}>
           {questao.opcoes.length} opções
         </Text>
-        <View style={styles.statusIcon}>
+        <View style={{
+          width: 28,
+          height: 28,
+          borderRadius: 14,
+          backgroundColor: isCompleted ? '#58CC02' : '#E0E0E0',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
           <MaterialIcons 
             name={isCompleted ? "check" : "play-arrow"} 
-            size={14} 
-            color={isCompleted ? "#FFFFFF" : "#999999"} 
+            size={16} 
+            color={isCompleted ? "#FFFFFF" : "#999"} 
           />
         </View>
       </View>
@@ -242,7 +238,6 @@ const DesafiosScreen = () => {
     },
     headerTitle: {
       fontSize: 18,
-      fontWeight: '700',
       fontFamily: 'Outfit-Bold',
       color: '#FFFFFF',
     },
@@ -277,18 +272,17 @@ const DesafiosScreen = () => {
     chipTextActive: { color: '#FFFFFF' },
     moduloInfo: {
       backgroundColor: '#FFFFFF',
-      borderRadius: 12,
-      padding: 16,
+      borderRadius: 16,
+      padding: 20,
       marginBottom: 20,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
+      shadowOpacity: 0.08,
+      shadowRadius: 8,
+      elevation: 4,
     },
     moduloTitle: {
       fontSize: 20,
-      fontWeight: '700',
       fontFamily: 'Outfit-Bold',
       color: '#1A1A1A',
       marginBottom: 8,
@@ -303,20 +297,19 @@ const DesafiosScreen = () => {
       marginBottom: 20,
     },
     questoesTitle: {
-      fontSize: 18,
-      fontWeight: '600',
+      fontSize: 20,
       fontFamily: 'Outfit-Bold',
       color: '#1A1A1A',
       marginBottom: 16,
     },
     questoesList: {
       flex: 1,
-      gap: 10,
     },
     gridContainer: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       justifyContent: 'space-between',
+      rowGap: 12,
     },
     emptyState: {
       flex: 1,
@@ -343,7 +336,6 @@ const DesafiosScreen = () => {
     },
     blockedTitle: {
       fontSize: 18,
-      fontWeight: '600',
       fontFamily: 'Outfit-Bold',
       color: '#FF6B6B',
       marginTop: 16,
@@ -366,7 +358,6 @@ const DesafiosScreen = () => {
     },
     historiaButtonText: {
       fontSize: 14,
-      fontWeight: '600',
       fontFamily: 'Outfit-Bold',
       color: '#FFFFFF',
     },
@@ -409,11 +400,32 @@ const DesafiosScreen = () => {
         {/* Sem filtros nesta visão */}
 
         {/* Ação rápida para seguir na próxima */}
-        <View style={{ marginBottom: 12 }}>
-          <TouchableOpacity style={[styles.historiaButton, { backgroundColor: '#4A90E2' }]} onPress={handleContinuarProxima}>
-            <Text style={styles.historiaButtonText}>Continuar próxima</Text>
-          </TouchableOpacity>
-        </View>
+        {historiaConcluida && questoesFiltradas.length > 0 && (
+          <View style={{ marginBottom: 16 }}>
+            <TouchableOpacity 
+              style={{
+                backgroundColor: '#4A90E2',
+                paddingVertical: 14,
+                borderRadius: 12,
+                alignItems: 'center',
+                shadowColor: '#4A90E2',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.2,
+                shadowRadius: 8,
+                elevation: 4,
+              }} 
+              onPress={handleContinuarProxima}
+            >
+              <Text style={{
+                fontSize: 16,
+                fontFamily: 'Outfit-Bold',
+                color: '#FFFFFF',
+              }}>
+                Continuar próxima
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Lista de Questões */}
         <View style={styles.questoesSection}>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, Image, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import ImputText from '../components/ImputText';
 import PrimaryNavButton from '../components/PrimaryNavButton';
 import { sendPasswordResetEmail } from "firebase/auth";

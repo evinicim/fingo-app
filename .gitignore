@@ -2,6 +2,10 @@ node_modules
 # Expo
 .expo/
 node_modules
+# Documentação (não commitada)
 docs/
+src/docs/
 scripts/fingo-app-*.json
 scripts/serviceAccountKey.json
+# Workspace files
+*.code-workspace

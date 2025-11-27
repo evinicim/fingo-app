@@ -139,12 +139,12 @@ const PrivacidadeScreen = () => {
                     <OptionItem
                         title="Termos de uso"
                         icon={<Feather name="file-text" size={24} color="#000000" />}
-                        onPress={() => Alert.alert("Termos de Uso", "Funcionalidade em desenvolvimento")}
+                        onPress={() => navigation.navigate("TermosDeUso")}
                     />
                     <OptionItem
                         title="Política de privacidade"
                         icon={<MaterialCommunityIcons name="shield-lock-outline" size={24} color="#000000" />}
-                        onPress={() => Alert.alert("Política de Privacidade", "Funcionalidade em desenvolvimento")}
+                        onPress={() => navigation.navigate("PoliticaPrivacidade")}
                     />
                     <OptionItem
                         title="Manutenção de dados"

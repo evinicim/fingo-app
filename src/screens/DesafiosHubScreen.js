@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -13,18 +14,39 @@ const wp = (p) => {
 
 const QuestaoCard = ({ questao, isCompleted, onPress, index }) => {
   const colorByDiff = (d) => (d === 'medio' ? '#FFD700' : d === 'dificil' ? '#FF6B6B' : '#58CC02');
+  const diffColor = colorByDiff(questao.dificuldade);
+  
   return (
-    <TouchableOpacity style={[styles.card, { borderLeftColor: colorByDiff(questao.dificuldade) }]} onPress={() => onPress(questao)} activeOpacity={0.8}>
+    <TouchableOpacity 
+      style={[
+        styles.card, 
+        { 
+          borderColor: diffColor,
+          borderWidth: 1,
+          shadowColor: diffColor,
+        }
+      ]} 
+      onPress={() => onPress(questao)} 
+      activeOpacity={0.8}
+    >
       <View style={styles.cardHeader}>
-        <Text style={styles.cardTitle}>{questao.trilhaTitulo} · Q{index + 1}</Text>
-        <View style={[styles.badge, { backgroundColor: colorByDiff(questao.dificuldade) }]}>
-          <Text style={styles.badgeText}>{questao.dificuldade === 'medio' ? 'Médio' : questao.dificuldade === 'dificil' ? 'Difícil' : 'Fácil'}</Text>
+        <Text style={styles.cardTitle}>Questão {index + 1}</Text>
+        <View style={[styles.badge, { backgroundColor: diffColor }]}>
+          <Text style={styles.badgeText}>
+            {questao.dificuldade === 'medio' ? 'Médio' : questao.dificuldade === 'dificil' ? 'Difícil' : 'Fácil'}
+          </Text>
         </View>
       </View>
       <Text style={styles.cardQuestion} numberOfLines={2}>{questao.pergunta}</Text>
       <View style={styles.cardFooter}>
         <Text style={styles.footerText}>{questao.opcoes.length} opções</Text>
-        <MaterialIcons name={isCompleted ? 'check-circle' : 'play-circle-outline'} size={18} color={isCompleted ? '#58CC02' : '#999'} />
+        <View style={[styles.statusIcon, { backgroundColor: isCompleted ? '#58CC02' : '#E0E0E0' }]}>
+          <MaterialIcons 
+            name={isCompleted ? 'check' : 'play-arrow'} 
+            size={16} 
+            color={isCompleted ? '#FFFFFF' : '#999'} 
+          />
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -124,53 +146,95 @@ const DesafiosHubScreen = () => {
       </View>
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Filtro: Trilhas */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }}>
-          <View style={styles.chipsRow}>
-            <TouchableOpacity onPress={() => { setFiltroTrilhaId('all'); setFiltroModuloId('all'); }} style={[styles.chip, filtroTrilhaId==='all' && styles.chipActive]}>
-              <Text style={[styles.chipText, filtroTrilhaId==='all' && styles.chipTextActive]}>Todas trilhas</Text>
-            </TouchableOpacity>
-            {trilhas.map(t => (
-              <TouchableOpacity key={t.id} onPress={() => { setFiltroTrilhaId(t.id); setFiltroModuloId('all'); }} style={[styles.chip, filtroTrilhaId===t.id && styles.chipActive]}>
-                <Text style={[styles.chipText, filtroTrilhaId===t.id && styles.chipTextActive]}>{t.titulo}</Text>
+        <View style={{ marginBottom: 12 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.chipsRow}>
+              <TouchableOpacity onPress={() => { setFiltroTrilhaId('all'); setFiltroModuloId('all'); }} style={[styles.chip, filtroTrilhaId==='all' && styles.chipActive]}>
+                <Text style={[styles.chipText, filtroTrilhaId==='all' && styles.chipTextActive]}>Todas trilhas</Text>
               </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
+              {trilhas.map(t => (
+                <TouchableOpacity key={t.id} onPress={() => { setFiltroTrilhaId(t.id); setFiltroModuloId('all'); }} style={[styles.chip, filtroTrilhaId===t.id && styles.chipActive]}>
+                  <Text style={[styles.chipText, filtroTrilhaId===t.id && styles.chipTextActive]}>{t.titulo}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+        </View>
 
-        {/* Filtro: Módulos e Status/Dif */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }}>
-          <View style={styles.chipsRow}>
-            <TouchableOpacity onPress={() => setFiltroModuloId('all')} style={[styles.chip, filtroModuloId==='all' && styles.chipActive]}>
-              <Text style={[styles.chipText, filtroModuloId==='all' && styles.chipTextActive]}>Todos módulos</Text>
-            </TouchableOpacity>
-            {modulosQuiz.map(m => (
-              <TouchableOpacity key={m.id} onPress={() => setFiltroModuloId(m.id)} style={[styles.chip, filtroModuloId===m.id && styles.chipActive]}>
-                <Text style={[styles.chipText, filtroModuloId===m.id && styles.chipTextActive]}>{m.titulo}</Text>
-              </TouchableOpacity>
-            ))}
+        {/* Filtro: Módulos */}
+        {modulosQuiz.length > 0 && (
+          <View style={{ marginBottom: 12 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.chipsRow}>
+                <TouchableOpacity onPress={() => setFiltroModuloId('all')} style={[styles.chip, filtroModuloId==='all' && styles.chipActive]}>
+                  <Text style={[styles.chipText, filtroModuloId==='all' && styles.chipTextActive]}>Todos módulos</Text>
+                </TouchableOpacity>
+                {modulosQuiz.map(m => (
+                  <TouchableOpacity key={m.id} onPress={() => setFiltroModuloId(m.id)} style={[styles.chip, filtroModuloId===m.id && styles.chipActive]}>
+                    <Text style={[styles.chipText, filtroModuloId===m.id && styles.chipTextActive]}>{m.titulo}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
           </View>
-        </ScrollView>
+        )}
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={styles.chipsRow}>
-            {[{id:'all',label:'Todas'},{id:'todo',label:'Pendentes'},{id:'done',label:'Concluídas'}].map(opt => (
-              <TouchableOpacity key={opt.id} onPress={() => setFiltroStatus(opt.id)} style={[styles.chip, filtroStatus===opt.id && styles.chipActive]}>
-                <Text style={[styles.chipText, filtroStatus===opt.id && styles.chipTextActive]}>{opt.label}</Text>
-              </TouchableOpacity>
-            ))}
-            {[{id:'all',label:'Todas dif.'},{id:'facil',label:'Fácil'},{id:'medio',label:'Médio'},{id:'dificil',label:'Difícil'}].map(opt => (
-              <TouchableOpacity key={opt.id} onPress={() => setFiltroDificuldade(opt.id)} style={[styles.chip, filtroDificuldade===opt.id && styles.chipActive]}>
-                <Text style={[styles.chipText, filtroDificuldade===opt.id && styles.chipTextActive]}>{opt.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
+        {/* Filtro: Status e Dificuldade */}
+        <View style={{ marginBottom: 16 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.chipsRow}>
+              {[{id:'all',label:'Todas'},{id:'todo',label:'Pendentes'},{id:'done',label:'Concluídas'}].map(opt => (
+                <TouchableOpacity key={opt.id} onPress={() => setFiltroStatus(opt.id)} style={[styles.chip, filtroStatus===opt.id && styles.chipActive]}>
+                  <Text style={[styles.chipText, filtroStatus===opt.id && styles.chipTextActive]}>{opt.label}</Text>
+                </TouchableOpacity>
+              ))}
+              {[{id:'all',label:'Todas dif.'},{id:'facil',label:'Fácil'},{id:'medio',label:'Médio'},{id:'dificil',label:'Difícil'}].map(opt => (
+                <TouchableOpacity key={opt.id} onPress={() => setFiltroDificuldade(opt.id)} style={[styles.chip, filtroDificuldade===opt.id && styles.chipActive]}>
+                  <Text style={[styles.chipText, filtroDificuldade===opt.id && styles.chipTextActive]}>{opt.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+        </View>
 
         {/* CTA continuar */}
-        <View style={{ marginTop: 8, marginBottom: 12 }}>
-          <TouchableOpacity style={[styles.ctaButton]} onPress={handleContinuarProxima}>
-            <Text style={styles.ctaText}>Continuar próxima</Text>
-          </TouchableOpacity>
+        {proximaNaoRespondida && (
+          <View style={{ marginTop: 12, marginBottom: 16 }}>
+            <TouchableOpacity 
+              style={{
+                backgroundColor: '#4A90E2',
+                paddingVertical: 14,
+                borderRadius: 12,
+                alignItems: 'center',
+                shadowColor: '#4A90E2',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.2,
+                shadowRadius: 8,
+                elevation: 4,
+              }} 
+              onPress={handleContinuarProxima}
+            >
+              <Text style={{
+                fontSize: 16,
+                fontWeight: '700',
+                fontFamily: 'Outfit-Bold',
+                color: '#FFFFFF',
+              }}>
+                Continuar próxima
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Título da seção */}
+        <View style={{ marginBottom: 16 }}>
+          <Text style={{
+            fontSize: 20,
+            fontFamily: 'Outfit-Bold',
+            color: '#1A1A1A',
+          }}>
+            Questões ({questoesFiltradas.length})
+          </Text>
         </View>
 
         {/* Lista */}
@@ -181,9 +245,11 @@ const DesafiosHubScreen = () => {
             </View>
           ))}
           {questoesFiltradas.length === 0 && (
-            <View style={{ alignItems:'center', paddingVertical: 40 }}>
+            <View style={{ alignItems:'center', paddingVertical: 40, width: '100%' }}>
               <MaterialIcons name="quiz" size={48} color="#E0E0E0" />
-              <Text style={{ fontFamily:'Outfit-Regular', color:'#999', marginTop: 8 }}>Nenhuma questão encontrada.</Text>
+              <Text style={{ fontFamily:'Outfit-Regular', color:'#999', marginTop: 8, fontSize: 14 }}>
+                Nenhuma questão encontrada.
+              </Text>
             </View>
           )}
         </View>
@@ -194,25 +260,71 @@ const DesafiosHubScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex:1, backgroundColor:'#F7F9FC' },
-  header: { backgroundColor:'#58CC02', paddingHorizontal:20, paddingVertical:16 },
-  headerTitle: { color:'#FFF', fontFamily:'Outfit-Bold', fontSize:18 },
-  content: { flex:1, paddingHorizontal:16, paddingTop:16 },
-  chipsRow: { flexDirection:'row', flexWrap:'wrap', gap:8 },
-  chip: { paddingHorizontal:12, paddingVertical:6, borderRadius:16, backgroundColor:'#F0F0F0' },
-  chipActive: { backgroundColor:'#58CC02' },
-  chipText: { fontFamily:'Outfit-Bold', color:'#1A1A1A' },
-  chipTextActive: { color:'#FFF' },
-  ctaButton: { backgroundColor:'#4A90E2', paddingVertical:12, borderRadius:8, alignItems:'center' },
-  ctaText: { color:'#FFF', fontFamily:'Outfit-Bold' },
-  grid: { flexDirection:'row', flexWrap:'wrap', justifyContent:'space-between', rowGap:10 },
-  card: { backgroundColor:'#FFF', borderRadius:12, padding:12, borderLeftWidth:4, elevation:3 },
-  cardHeader: { flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginBottom:6 },
-  cardTitle: { fontFamily:'Outfit-Bold', color:'#1A1A1A', fontSize:12, flex:1, marginRight:8 },
-  badge: { paddingHorizontal:8, paddingVertical:4, borderRadius:12 },
-  badgeText: { color:'#FFF', fontFamily:'Outfit-Bold', fontSize:10 },
-  cardQuestion: { fontFamily:'Outfit-Regular', color:'#333', fontSize:14, lineHeight:20, marginBottom:8 },
+  header: { 
+    backgroundColor:'#58CC02', 
+    paddingHorizontal:20, 
+    paddingVertical:18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  headerTitle: { color:'#FFF', fontFamily:'Outfit-Bold', fontSize:20 },
+  content: { flex:1, paddingHorizontal:16, paddingTop:20 },
+  chipsRow: { flexDirection:'row', gap:8, paddingVertical: 4 },
+  chip: { 
+    paddingHorizontal:14, 
+    paddingVertical:8, 
+    borderRadius:20, 
+    backgroundColor:'#F0F0F0',
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  chipActive: { 
+    backgroundColor:'#58CC02',
+    borderColor: '#58CC02',
+    shadowColor: '#58CC02',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  chipText: { 
+    fontFamily:'Outfit-Bold', 
+    color:'#666',
+    fontSize: 13,
+  },
+  chipTextActive: { 
+    color:'#FFF',
+    fontSize: 13,
+  },
+  grid: { flexDirection:'row', flexWrap:'wrap', justifyContent:'space-between', rowGap:12 },
+  card: { 
+    backgroundColor:'#FFF', 
+    borderRadius:16, 
+    padding:16, 
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  cardHeader: { flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginBottom:10 },
+  cardTitle: { fontFamily:'Outfit-Bold', color:'#1A1A1A', fontSize:14, flex:1, marginRight:8 },
+  badge: { paddingHorizontal:10, paddingVertical:5, borderRadius:16, minWidth: 60, alignItems: 'center' },
+  badgeText: { color:'#FFF', fontFamily:'Outfit-Bold', fontSize:11 },
+  cardQuestion: { fontFamily:'Outfit-Regular', color:'#333', fontSize:13, lineHeight:18, marginBottom:12, minHeight: 36 },
   cardFooter: { flexDirection:'row', justifyContent:'space-between', alignItems:'center' },
-  footerText: { color:'#999', fontFamily:'Outfit-Regular', fontSize:12 },
+  footerText: { color:'#999', fontFamily:'Outfit-Regular', fontSize:11 },
+  statusIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
 
 export default DesafiosHubScreen;

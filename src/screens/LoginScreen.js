@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, SafeAreaView, Image, Alert } from "react-native";
+import { View, Text, StyleSheet, Image, Alert } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import ImputText from "../components/ImputText";
 import PrimaryNavButton from "../components/PrimaryNavButton";
 import SecondLink from "../components/SecondLink";
@@ -29,7 +30,19 @@ const LoginScreen = ({ navigation }) => {
       .then(async (userCredential) => {
         // Signed in
         const user = userCredential.user;
-        console.log("Usuário logado:", user.email);
+        // ENDPOINT: Usuário logado (teste de autenticação)
+        // console.log("Usuário logado:", user.email);
+        
+        // Carregar progresso do Firestore ao fazer login (sincronizar)
+        try {
+          const { loadUserProgress } = require('../services/progressService');
+          // Forçar carregamento do Firestore para sincronizar
+          const progress = await loadUserProgress(true);
+          // ENDPOINT: Progresso carregado (teste de sincronização)
+          // console.log('✅ Progresso carregado do Firestore para usuário:', user.uid);
+        } catch (err) {
+          console.warn('⚠️ Erro ao carregar progresso do Firestore:', err);
+        }
         
         // Pré-carregar dados essenciais em background (não bloqueia navegação)
         preloadEssentialData(user.uid).catch(err => {
@@ -39,9 +52,24 @@ const LoginScreen = ({ navigation }) => {
         navigation.navigate("Main", { screen: "Home" });
       })
       .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        Alert.alert("Erro no login", errorMessage);
+        console.error("Erro no login:", error);
+        
+        // Mensagens de erro mais amigáveis
+        let mensagemErro = "Ocorreu um erro ao fazer login. Tente novamente.";
+        
+        if (error.code === 'auth/user-not-found') {
+          mensagemErro = "Usuário não encontrado. Verifique o email ou crie uma conta.";
+        } else if (error.code === 'auth/wrong-password') {
+          mensagemErro = "Senha incorreta. Tente novamente.";
+        } else if (error.code === 'auth/invalid-email') {
+          mensagemErro = "Email inválido. Verifique o email informado.";
+        } else if (error.code === 'auth/invalid-credential') {
+          mensagemErro = "Email ou senha incorretos. Tente novamente.";
+        } else if (error.message) {
+          mensagemErro = error.message;
+        }
+        
+        Alert.alert("Erro no login", mensagemErro);
       });
   };
 

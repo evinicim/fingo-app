@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Dimensions, Animated } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Animated } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { MaterialIcons } from '@expo/vector-icons';
-import { enviarFeedback } from '../services/feedbackService';
 
 // Funções de responsividade simples
 const wp = (percentage) => {
@@ -124,13 +124,6 @@ const FeedbackScreen = () => {
 
   const handleContinuar = () => {
     navigation.navigate('Desafios', { trilhaId, moduloId });
-  };
-
-  const handleAvaliar = async () => {
-    try {
-      await enviarFeedback({ tipo: 'questao', itemId: questaoId, rating: respostaCorreta ? 5 : 3 });
-    } catch (_) {}
-    handleContinuar();
   };
 
   const handleVoltar = () => {
@@ -399,9 +392,9 @@ const FeedbackScreen = () => {
             
             <TouchableOpacity
               style={[styles.button, styles.continuarButton]}
-              onPress={handleAvaliar}
+              onPress={handleContinuar}
             >
-              <Text style={styles.buttonText}>Avaliar e continuar</Text>
+              <Text style={styles.buttonText}>Continuar</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
