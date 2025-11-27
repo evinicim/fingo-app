@@ -1,13 +1,13 @@
 // CÓDIGO PARA O ARQUIVO: HomeScreen.js
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, Dimensions, Animated, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, Dimensions, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Feather, MaterialIcons } from '@expo/vector-icons';
-import { getTrilhasWithUnlockStatus, debugTrilhasStatus, resetProgress, simularTrilha1Completa, getUserStats } from '../services/progressService';
+import { getTrilhasWithUnlockStatus, getUserStats } from '../services/progressService';
 import { getTrilhas } from '../services/contentService';
 import { getDesafiosAtivos, getDesafiosDoUsuario } from '../services/desafiosService';
 import { buscarDadosPerfil } from '../services/userService';
@@ -78,7 +78,7 @@ const ZigzagConnector = ({ isCompleted = false, index = 0, screenWidth, isLeftTo
 };
 
 // Componente de Header
-const HeaderWithActions = ({ userName = "Jovem Financista", onReset, onSimulate }) => {
+const HeaderWithActions = ({ userName = "Jovem Financista" }) => {
   const styles = StyleSheet.create({
     headerContainer: {
       backgroundColor: '#58CC02',
@@ -97,21 +97,6 @@ const HeaderWithActions = ({ userName = "Jovem Financista", onReset, onSimulate 
       justifyContent: 'space-between',
       alignItems: 'center',
     },
-    testButtons: {
-      flexDirection: 'row',
-      gap: 8,
-    },
-    testButton: {
-      backgroundColor: 'rgba(255, 255, 255, 0.2)',
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 12,
-    },
-    testButtonText: {
-      color: '#FFFFFF',
-      fontSize: 12,
-      fontFamily: 'Outfit-Bold',
-    },
     welcomeText: {
       fontSize: 20,
       color: '#FFFFFF',
@@ -123,14 +108,6 @@ const HeaderWithActions = ({ userName = "Jovem Financista", onReset, onSimulate 
     <View style={styles.headerContainer}>
       <View style={styles.headerContent}>
         <Text style={styles.welcomeText}>Olá, {userName}!</Text>
-      </View>
-      <View style={styles.testButtons}>
-        <TouchableOpacity style={styles.testButton} onPress={onReset}>
-          <Text style={styles.testButtonText}>Reset</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.testButton} onPress={onSimulate}>
-          <Text style={styles.testButtonText}>Simular próxima</Text>
-        </TouchableOpacity>
       </View>
     </View>
   );
@@ -313,54 +290,6 @@ const HomeScreen = ({ navigation }) => {
     });
   };
 
-  const handleReset = async () => {
-    try {
-      await resetProgress();
-      const status = await getTrilhasWithUnlockStatus();
-      setTrilhasComStatus(status);
-      Alert.alert('Sucesso', 'Progresso resetado!');
-    } catch (error) {
-      Alert.alert('Erro', 'Falha ao resetar progresso');
-    }
-  };
-
-  const handleSimulate = async () => {
-    try {
-      // Simulação progressiva: encontra a primeira trilha com progresso < 100 e marca como concluída (história + questões)
-      const ordered = [...trilhas].sort((a,b) => (a?.ordem ?? 999) - (b?.ordem ?? 999));
-      const status = await getTrilhasWithUnlockStatus();
-      const aberto = ordered.find(t => (status.find(s => s.id === t.id)?.progresso || 0) < 100);
-      if (!aberto) {
-        Alert.alert('Info', 'Todas as trilhas já estão completas.');
-        return;
-      }
-      // Reutiliza a função existente para T1 se for trilha_01, caso contrário completa via progresso local
-      if (aberto.id === 'trilha_01') {
-        await simularTrilha1Completa();
-      } else {
-        // Marca como completa no progresso local
-        const { loadUserProgress, saveUserProgress, calculateTrilhaProgress } = await import('../services/progressService');
-        const prog = await loadUserProgress();
-        if (!prog.historiasConcluidas.includes(aberto.id)) prog.historiasConcluidas.push(aberto.id);
-        // Marca questões da trilha como completadas pelo padrão de ids (questao_trilha_X_...)
-        const { getDocs, collection, query, where } = await import('firebase/firestore');
-        const { db } = await import('../services/firebaseConfig');
-        const qs = await getDocs(query(collection(db, 'questao'), where('trilhaId', '==', aberto.id)));
-        qs.docs.forEach(d => {
-          if (!prog.questoesCompletadas.some(q => q.id === d.id)) {
-            prog.questoesCompletadas.push({ id: d.id, pontuacao: 10, dataConclusao: new Date().toISOString() });
-          }
-        });
-        await saveUserProgress(prog);
-        await calculateTrilhaProgress(aberto.id);
-      }
-      const novo = await getTrilhasWithUnlockStatus();
-      setTrilhasComStatus(novo);
-      Alert.alert('Sucesso', `Simulada como completa: ${aberto.titulo}`);
-    } catch (error) {
-      Alert.alert('Erro', 'Falha ao simular trilha');
-    }
-  };
 
   const styles = createResponsiveStyles(screenWidth, screenHeight);
 
@@ -416,8 +345,6 @@ const HomeScreen = ({ navigation }) => {
       {/* Header */}
       <HeaderWithActions 
         userName={userData.primeiroNome} 
-        onReset={handleReset}
-        onSimulate={handleSimulate}
       />
       
       <ScrollView 
